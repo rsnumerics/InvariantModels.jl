@@ -24,7 +24,6 @@ makedocs(;
 #     build   = "docs/build",
     pages=[
         "Home" => "index.md",
-        "Shaw-Pierre" => ["Shaw-Pierre_Oblique/index.md"],
         "Tutorial" => "Tutorial.md"
     ],
     expandfirst=["index.md"],
