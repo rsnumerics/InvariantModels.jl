@@ -6,18 +6,18 @@ This is a two degrees-of-freedom mechanical system with a nonlinear spring and d
 ![](ShawPierre.svg)
 
 The system has a long history, but the current version is taken from [Bettini et al.](https://arxiv.org/abs/2503.21895), where the authors transform the system into the new coordinates
-$$
+```math
 \boldsymbol{y}=\begin{pmatrix}y_1\\y_2\\y_3\\y_4 \end{pmatrix}:=
 \begin{pmatrix}\dot{x}_1\\\dot{x}_2-\dot{x}_1\\x_1\\x_2 - x_1 \end{pmatrix},
-$$
+```
 so that the eigenvectors of the Jacobian are not close to being orthogonal. The fully transformed system is given by
-$$
+```math
 \dot{\boldsymbol{y}}=\begin{pmatrix}0 & 0 & 1 & 0\\ 0 & 0 & 0 & 1\\ -k_{1} & k_{2} & -c_{1} & c_{2}\\ 0 & -\left(k_{1}+2 k_{2}\right) & 0 & -\left(c_{1}+2 c_{2}\right) \end{pmatrix}\boldsymbol{y}+\begin{pmatrix}0\\ 0\\ -\alpha y_{1}^{3}+\alpha c_{1}y_{3}^{3}+\beta\cos(\omega(t+0.1))\\ \beta\cos t \end{pmatrix},
-$$
+```
 where the parameter values are
-$$
+```math
 k_{1}=1,\;k_{2}=3.325,\;c_{1}=0.05,\;c_{2}=0.01,\;\alpha=0.5.
-$$
+```
 In our modification we have added forcing and nonlinear damping, otherwise it is too trivial. The forcing amplitude is $\beta$.
 
 The system has two vibration modes. The first mode has $\omega_1\approx1$ [rad/unit time], the second mode has $\omega_2\approx 2.765$ [rad/unit time].
