@@ -17,8 +17,9 @@ function ArrayStiefelOblique(Rows::Int, Columns::Int, Skew_Dimension::Int; field
     return ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, field}(manifold)
 end
 
-ManifoldsBase.decorated_manifold(M::ArrayStiefelOblique) = M.manifold
-ManifoldsBase.active_traits(f, ::ArrayStiefelOblique, args...) = ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::ArrayStiefelOblique) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefelOblique, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefelOblique, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 @inline ManifoldsBase.default_retraction_method(M::ArrayStiefelOblique) = default_retraction_method(M.manifold)
 

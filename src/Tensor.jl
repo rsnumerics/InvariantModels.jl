@@ -17,9 +17,9 @@ end
 
 @inline Base.getindex(M::TensorManifold, i::Integer) = M.manifold[i]
 
-ManifoldsBase.decorated_manifold(M::TensorManifold) = M.manifold
-ManifoldsBase.active_traits(f, ::TensorManifold, args...) =
-    ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::TensorManifold) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::TensorManifold, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::TensorManifold, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 # internal
 function nr_nodes(children::Array{T,2}) where {T<:Integer}

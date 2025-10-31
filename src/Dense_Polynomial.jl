@@ -18,8 +18,11 @@ end
 
 @inline Base.getindex(M::Dense_Polynomial, i::Integer) = M.manifold[i]
 @inline Base.length(M::Dense_Polynomial) = length(M.manifold.manifolds)
-ManifoldsBase.decorated_manifold(M::Dense_Polynomial) = M.manifold
-ManifoldsBase.active_traits(f, ::Dense_Polynomial, args...) = ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::Dense_Polynomial) = M.manifold
+
+# Forward all functions by default to the decorated base manifold
+@inline ManifoldsBase.get_forwarding_type(::Dense_Polynomial, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::Dense_Polynomial, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 function Dense_Polynomial(Output_Dimension, Input_Dimension, Skew_Dimension, Start_Order, End_Order;
     Perperdicular_Indices=1:Input_Dimension, field::AbstractNumbers=ℝ)

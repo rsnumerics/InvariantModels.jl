@@ -202,11 +202,11 @@ end
 
 @inline Base.getindex(M::MultiStep_Model, i::Integer) = M.manifold[i]
 @inline Base.length(M::MultiStep_Model) = length(M.manifold.manifolds)
-ManifoldsBase.decorated_manifold(M::MultiStep_Model) = M.manifold
-ManifoldsBase.active_traits(f, ::MultiStep_Model, args...) =
-    ManifoldsBase.IsExplicitDecorator()
-#
-ManifoldsBase.manifold_dimension(M::MultiStep_Model) = manifold_dimension(M.manifold)
+@inline ManifoldsBase.decorated_manifold(M::MultiStep_Model) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::MultiStep_Model, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::MultiStep_Model, ::Any, _) = ManifoldsBase.SimpleForwardingType()
+
+@inline ManifoldsBase.manifold_dimension(M::MultiStep_Model) = manifold_dimension(M.manifold)
 
 # add Trajectories here...
 """

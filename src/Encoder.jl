@@ -73,8 +73,9 @@ end
 
 @inline Base.getindex(M::QPEncoder, i::Integer) = M.manifold[i]
 @inline Base.length(M::QPEncoder) = length(M.manifold.manifolds)
-ManifoldsBase.decorated_manifold(M::QPEncoder) = M.manifold
-ManifoldsBase.active_traits(f, ::QPEncoder, args...) = ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::QPEncoder) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::QPEncoder, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::QPEncoder, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 function Is_Linear_Fixed(Linear_Type::Encoder_Linear_Type)
     return ((Linear_Type == Encoder_Fixed) || (Linear_Type == Encoder_Orthogonal))

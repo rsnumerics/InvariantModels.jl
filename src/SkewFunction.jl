@@ -7,8 +7,11 @@ function SkewFunction(m::Int, k::Int; field::AbstractNumbers=ℝ)
     return SkewFunction{m,k,field}(manifold)
 end
 
-ManifoldsBase.decorated_manifold(M::SkewFunction) = M.manifold
-ManifoldsBase.active_traits(f, ::SkewFunction, args...) = ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::SkewFunction) = M.manifold
+
+# Forward all functions by default to the decorated base manifold
+@inline ManifoldsBase.get_forwarding_type(::SkewFunction, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::SkewFunction, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 function Base.zero(M::Euclidean{T,𝔽}) where {T,𝔽}
     if 𝔽 == ℂ

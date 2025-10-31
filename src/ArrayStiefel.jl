@@ -19,15 +19,17 @@ function ArrayStiefel(
     return ArrayStiefel{Rows,Columns,Skew_Dimension,tall,field}(manifold)
 end
 
-ManifoldsBase.decorated_manifold(M::ArrayStiefel) = M.manifold
-ManifoldsBase.active_traits(f, ::ArrayStiefel, args...) =
-    ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::ArrayStiefel) = M.manifold
+
+# Forward all functions by default to the decorated base manifold
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefel, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefel, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 @inline ManifoldsBase.default_retraction_method(M::ArrayStiefel) =
     default_retraction_method(M.manifold)
 
-function Base.zero(M::ArrayStiefel)
-    return rand(M)
+function Base.zero(M)
+    return rand(M.manifold)
 end
 
 function Slice(M::ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽}, X, Encoded_Slice) where {Rows,Columns,Skew_Dimension,tall,𝔽}

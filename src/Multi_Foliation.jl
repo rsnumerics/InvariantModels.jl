@@ -153,9 +153,9 @@ end
 
 @inline Base.getindex(M::Multi_Foliation, i::Integer) = M.manifold[i]
 @inline Base.length(M::Multi_Foliation) = length(M.manifold.manifolds)
-ManifoldsBase.decorated_manifold(M::Multi_Foliation) = M.manifold
-ManifoldsBase.active_traits(f, ::Multi_Foliation, args...) =
-    ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::Multi_Foliation) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::Multi_Foliation, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::Multi_Foliation, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 function Base.zero(
     MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},

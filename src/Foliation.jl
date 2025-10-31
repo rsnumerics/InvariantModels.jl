@@ -5,8 +5,9 @@ end
 
 @inline Base.getindex(M::Foliation, i::Integer) = M.manifold[i]
 @inline Base.length(M::Foliation) = length(M.manifold.manifolds)
-ManifoldsBase.decorated_manifold(M::Foliation) = M.manifold
-ManifoldsBase.active_traits(f, ::Foliation, args...) = ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::Foliation) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::Foliation, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::Foliation, ::Any, _) = ManifoldsBase.SimpleForwardingType()
 
 function Foliation(
     State_Dimension,
