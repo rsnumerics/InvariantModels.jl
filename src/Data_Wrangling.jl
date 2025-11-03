@@ -404,38 +404,57 @@ function Estimate_Linear_Model(
     From_Data!(MM, MX, Index_List, Data, Encoded_Phase, Scaling)
     if Iterations > 0
         MM_Cache = Make_Cache(MM, MX, Index_List, Data, Encoded_Phase, Scaling)
-        #         Beta, LL, NM = Optimise!(MM, MX, Index_List, Data, Encoded_Phase, Scaling, Cache = MM_Cache)
-        #         @show Beta, LL, NM
-        optfun = Optimization.OptimizationFunction(
-            (x, p) -> Loss_With_Update(
-                MM,
-                x,
-                Index_List,
-                Data,
-                Encoded_Phase,
-                Scaling,
-                Cache = MM_Cache,
-            ),
-            grad = (g, x, p) -> Gradient!(
-                g,
-                MM,
-                x,
-                Index_List,
-                Data,
-                Encoded_Phase,
-                Scaling,
-                Cache = MM_Cache,
-            ),
-        )
-        prob = Optimization.OptimizationProblem(optfun, MX, [])
-        osol = Optimization.solve(
-            prob,
-            Optim.GradientDescent(alphaguess = 1 * eps(1.0));
-            maxiters = Iterations,
-        )
-        display(osol)
-        display(osol.stats)
-        MX .= osol.u
+        Maximum_Radius = 4 * sqrt(manifold_dimension(MM))
+        Trust_Radius = 1.0
+        t0 = time()
+        println("Estimate_Linear_Model: Starting Optimisation")
+        for it in 1:Iterations
+            Trust_Radius, M_Loss, M_Grad = Optimise!(
+                MM, MX, Index_List, Data, Encoded_Phase, Scaling,
+                Cache=MM_Cache, Radius=Trust_Radius, Maximum_Radius=Maximum_Radius
+            )
+            println(
+                "    Step=$(it). " *
+                @sprintf("time = %.1f[s] ", time() - t0) *
+                @sprintf("F(x) = %.5e ", M_Loss) *
+                @sprintf("G(x) = %.5e ", M_Grad) *
+                @sprintf("R = %.5e ", Trust_Radius)
+            )
+            if Trust_Radius >= Maximum_Radius
+                Trust_Radius = 1.0
+                return break
+            end
+         end
+#         optfun = Optimization.OptimizationFunction(
+#             (x, p) -> Loss_With_Update(
+#                 MM,
+#                 x,
+#                 Index_List,
+#                 Data,
+#                 Encoded_Phase,
+#                 Scaling,
+#                 Cache = MM_Cache,
+#             ),
+#             grad = (g, x, p) -> Gradient!(
+#                 g,
+#                 MM,
+#                 x,
+#                 Index_List,
+#                 Data,
+#                 Encoded_Phase,
+#                 Scaling,
+#                 Cache = MM_Cache,
+#             ),
+#         )
+#         prob = Optimization.OptimizationProblem(optfun, MX, [])
+#         osol = Optimization.solve(
+#             prob,
+#             Optim.GradientDescent(alphaguess = 1 * eps(1.0));
+#             maxiters = Iterations,
+#         )
+#         display(osol)
+#         display(osol.stats)
+#         MX .= osol.u
     end
     #
     @time SS, BB_Linear = Find_Torus(MM, MX)
@@ -598,6 +617,7 @@ function Select_Bundles_By_Energy(
     Decomp;
     How_Many,
     Ignore_Real = true,
+    Time_Step = 1.0,
 )
     if Ignore_Real
         Bundles = filter(x -> (length(x) == 2), Decomp.Bundles)
@@ -614,10 +634,10 @@ function Select_Bundles_By_Energy(
     Order = sortperm(Energies, rev = true)
     println("Bundles selected:")
     display(Bundles[Order[1:Limit]])
-    println("Energies:")
-    for k in Order[1:min(2 * Limit, length(Order))]
-        println(Bundles[k], " -> E=", Energies[k])
-    end
+#     println("Energies:")
+#     for k in Order[1:min(2 * Limit, length(Order))]
+#         println(Bundles[k], " -> E=", Energies[k])
+#     end
     Select = vcat(Bundles[Order[1:Limit]]...)
     if Select == range(first(Select), last(Select))
         Select = range(first(Select), last(Select))
@@ -628,8 +648,24 @@ function Select_Bundles_By_Energy(
         push!(Re_Bundles, Bundles[s] .- (Bundles[s][1] - Index))
         Index = Re_Bundles[end][end] + 1
     end
-    println("Reconstituted bundles:")
-    display(Re_Bundles)
+#     println("Reconstituted bundles:")
+#     display(Re_Bundles)
+    BB_Mean = dropdims(mean(Decomp.Reduced_Model, dims = 2), dims = 2)
+    println("Select_Bundles_By_Energy: Eigenvalues")
+    for (bb, ee) in zip(Bundles[Order], Energies[Order])
+        EV = eigvals(BB_Mean[bb, bb])
+        if length(bb) == 2
+            println(
+                "[", bb[1], "-", bb[end],
+                "]: E=", ee,
+                " Frequency ", abs(angle(EV[1])) / Time_Step,
+                " [rad/s]; ", abs(angle(EV[1])) / (2 * pi * Time_Step),
+                " [Hz]; Damping ", -log(abs.(EV[1])) ./ abs.(angle(EV[1])),
+                )
+        else
+            println("[", bb[1], "]: E=", ee, " Decay rate ", real(EV[1]))
+        end
+    end
     return (
         Unreduced_Model = Decomp.Unreduced_Model[Select, :, Select],
         Data_Encoder = Decomp.Data_Encoder[Select, :, :],

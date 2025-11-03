@@ -820,8 +820,30 @@ function Evaluate_Jacobian_Step_One!(
     return nothing
 end
 
-# no need to be different for linear systems. The Monomials can be constructed differently, though
-function Evaluate_Jacobian_Step_Two!(
+function Gradient_Hessian_Helper(GG1, HH11, HH12, BB_Jac_C, Forward_Jac, Jac, A_Monomials, Encoded_Phase, Residual, Scaling, u)
+    idR = 1 + mod(u - 1, 2)
+    idC = 1 + mod(u, 2)
+    #
+    BB_Jac_C_R = view(BB_Jac_C, :, :, :, :, idR)
+    BB_Jac_C_C = view(BB_Jac_C, :, :, :, :, idC)
+    Jac_C = view(Jac, :, :, u)
+    Forward_Jac_C = view(Forward_Jac, :, u, :)
+    Encoded_Phase_R = view(Encoded_Phase, :, u - 1)
+    A_Monomials_R = view(A_Monomials, :, u - 1)
+    Residual_C = view(Residual, :, u)
+    Sc = Scaling[u]
+    #
+    @tullio BB_Jac_C_C[k1, l1, l2, l3] = Jac_C[k1, p] * BB_Jac_C_R[p, l1, l2, l3]
+    @tullio BB_Jac_C_C[k1, k1, l2, l3] += Encoded_Phase_R[l2] * A_Monomials_R[l3]
+    @tullio GG1[l1, l2, l3] += BB_Jac_C_C[p, l1, l2, l3] * Residual_C[p] * Sc
+    @tullio HH11[l1, l2, l3, k1, k2, k3] += BB_Jac_C_C[p, l1, l2, l3] * BB_Jac_C_C[p, k1, k2, k3] * Sc
+    @tullio HH12[i, l1, l2, l3] += Forward_Jac_C[p, i] * BB_Jac_C_C[p, l1, l2, l3] * Sc
+    nothing
+end
+
+function Gradient_Hessian_New!(
+    GG,
+    HH,
     Cache::MultiStep_Model_Cache,
     M::MultiStep_Model{State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories},
     X,
@@ -830,102 +852,31 @@ function Evaluate_Jacobian_Step_Two!(
     Encoded_Phase,
     Scaling,
 ) where {State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories}
-    #     println("MultiStep_Model: Evaluate_Jacobian_Step_Two!")
-    A_Monomials = view(Cache.Monomials, M.Admissible, :)
-    Jac = Cache.Jac
-    Forward_Jac = Cache.Forward_Jac
-    BB_Jac = Cache.BB_Jac
-    Id = Diagonal(ones(size(Data, 1)))
-    @inbounds for t = 1:(length(Index_List)-1)
-        for u = (2+Index_List[t]):Index_List[t+1]
-            Jac_R = view(Jac, :, :, u)
-            BB_Jac_R = view(BB_Jac, :, u - 1, :, :, :)
-            BB_Jac_C = view(BB_Jac, :, u, :, :, :)
-            Encoded_Phase_R = view(Encoded_Phase, :, u - 1)
-            A_Monomials_R = view(A_Monomials, :, u - 1)
-            #             @show size(BB_Jac_C), size(A_Monomials_R), size(A_Monomials)
-            @tullio BB_Jac_C[k1, l1, l2, l3] = Jac_R[k1, p] * BB_Jac_R[p, l1, l2, l3]
-            @tullio BB_Jac_C[k1, l1, l2, l3] +=
-                Id[k1, l1] * Encoded_Phase_R[l2] * A_Monomials_R[l3]
-        end
-    end
-    AA_RS = reshape(BB_Jac, size(Data)..., :)
-    #     BB_RS = deepcopy(Forward_Jac)
-    #     @show size(AA_RS), size(BB_RS)
-    return AA_RS, Forward_Jac
-end
-
-function Gradient_Helper(GG1, BB_Jac, Jac, A_Monomials, Encoded_Phase, Residual, Scaling, u)
-    #     Jac_R = view(Jac, :, :, u)
-    #     BB_Jac_R = view(BB_Jac, :, :, :, :, 1+mod(u-1, 2))
-    #     BB_Jac_C = view(BB_Jac, :, :, :, :, 1+mod(u, 2))
-    #     Encoded_Phase_R = view(Encoded_Phase, :, u-1)
-    #     A_Monomials_R = view(A_Monomials, :, u-1)
-    #     @tullio BB_Jac_C[k1, l1, l2, l3] = Jac_R[k1, p] * BB_Jac_R[p, l1, l2, l3]
-    #     @tullio BB_Jac_C[k1, l1, l2, l3] += Id[k1, l1] * Encoded_Phase_R[l2] * A_Monomials_R[l3]
-    #     Sc = Scaling[u]
-    #     Residual_C = view(Residual, :, u)
-    #     @tullio GG1[l1, l2, l3] += BB_Jac_C[p, l1, l2, l3] * Residual_C[p] * Sc
-    idR = 1 + mod(u - 1, 2)
-    idC = 1 + mod(u, 2)
-    @inbounds @fastmath for k1 in axes(BB_Jac, 1),
-        l1 in axes(BB_Jac, 2),
-        l2 in axes(BB_Jac, 3),
-        l3 in axes(BB_Jac, 4),
-        p in axes(Jac, 1)
-
-        BB_Jac[k1, l1, l2, l3, idC] = Jac[k1, p, idR] * BB_Jac[p, l1, l2, l3, idR]
-    end
-    @inbounds @fastmath for k1 in axes(BB_Jac, 1),
-        l2 in axes(BB_Jac, 3),
-        l3 in axes(BB_Jac, 4)
-
-        BB_Jac[k1, k1, l2, l3, idC] += Encoded_Phase[l2, u-1] * A_Monomials[l3, u-1]
-    end
-    Sc = Scaling[u]
-    @inbounds @fastmath for p in axes(BB_Jac, 1),
-        l1 in axes(BB_Jac, 2),
-        l2 in axes(BB_Jac, 3),
-        l3 in axes(BB_Jac, 4)
-
-        GG1[l1, l2, l3] += BB_Jac[p, l1, l2, l3, idC] * Residual[p, u] * Sc
-    end
-    nothing
-end
-
-# no need to be different for linear systems. The Monomials can be constructed differently, though
-function Gradient!(
-    GG,
-    M::MultiStep_Model{State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories},
-    X,
-    Index_List,
-    Data,
-    Encoded_Phase,
-    Scaling;
-    Cache::MultiStep_Model_Cache,
-) where {State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories}
-    #     println("MultiStep_Model: Evaluate_Jacobian_Step_Two!")
-    # Update Cache
-    Evaluate!(Cache.Values, Cache.Monomials, M, X, Index_List, Data, Encoded_Phase)
-    Cache.Residual .= Cache.Values .- Data
-    # start calculating
     Evaluate_Jacobian_Step_One!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
     Residual = Cache.Residual
     A_Monomials = view(Cache.Monomials, M.Admissible, :)
     Jac = Cache.Jac
     Forward_Jac = Cache.Forward_Jac
-    #     GG = Cache.Gradient
     GG .= 0
+    HH .= 0
     S1 = prod(size(X.WW))
     S2 = size(Forward_Jac, 3)
     GG1 = reshape(view(GG, 1:S1), size(X.WW)...)
-    Id = Diagonal(ones(size(Data, 1)))
-    BB_Jac = zeros(eltype(Data), State_Dimension, size(X.WW)..., 2)
-    @inbounds for t = 1:(length(Index_List)-1)
-        for u = (2+Index_List[t]):Index_List[t+1]
-            Gradient_Helper(
+    HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
+    BB_Jac_C = zeros(eltype(Data), State_Dimension, size(X.WW)..., 2)
+    @inbounds for t in 1:(length(Index_List)-1)
+        C_range = (S1+1+(t-1)*S2):(S1+t*S2)
+        HH12 = reshape(view(HH, C_range, 1:S1), :, size(X.WW)...)
+        HH22 = view(HH, C_range, C_range)
+        GG2 = view(GG, C_range)
+        BB_Jac_C .= 0
+        for u in (2+Index_List[t]):Index_List[t+1]
+            Gradient_Hessian_Helper(
                 GG1,
-                BB_Jac,
+                HH11,
+                HH12,
+                BB_Jac_C,
+                Forward_Jac,
                 Jac,
                 A_Monomials,
                 Encoded_Phase,
@@ -934,67 +885,16 @@ function Gradient!(
                 u,
             )
         end
+        HH[1:S1, C_range] .= transpose(view(HH, C_range, 1:S1))
+        #
         R_range = (1+Index_List[t]):Index_List[t+1]
-        C_range = (S1+1+(t-1)*S2):(S1+t*S2)
         Scaling_R = view(Scaling, R_range)
         BB_RS_Rt = view(Forward_Jac, :, R_range, :)
         #
-        GG2 = view(GG, C_range)
         Residual_R = view(Residual, :, R_range)
         @tullio GG2[j] = Residual_R[p, k] * BB_RS_Rt[p, k, j] * Scaling_R[k]
-    end
-    return GG
-end
-
-function Gradient_Hessian!(
-    Cache::MultiStep_Model_Cache,
-    M::MultiStep_Model,
-    X,
-    Index_List,
-    Data,
-    Encoded_Phase,
-    Scaling,
-)
-    #     println("MultiStep_Model: Gradient_Hessian!")
-    Evaluate_Jacobian_Step_One!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
-    AA_RS, BB_RS =
-        Evaluate_Jacobian_Step_Two!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
-    #
-    Residual = Cache.Residual
-    S1 = size(AA_RS, 3)
-    S2 = size(BB_RS, 3)
-    NT = length(Index_List) - 1
-    HH = Cache.Hessian # zeros(S1 + NT * S2, S1 + NT * S2)
-    GG = Cache.Gradient # zeros(S1 + NT * S2)
-    begin
-        HH11 = view(HH, 1:S1, 1:S1)
-        #         mul!(HH11, transpose(AA_RS), AA_RS, 1, 0)
-        @tullio HH11[i, j] = AA_RS[p, k, i] * AA_RS[p, k, j] * Scaling[k]
-        GG1 = view(GG, 1:S1)
-        #         mul!(GG1, transpose(AA_RS), vec(Residual), 1, 0)
-        @tullio GG1[j] = Residual[p, k] * AA_RS[p, k, j] * Scaling[k]
-    end
-    for t = 1:NT
-        R_range = (1+Index_List[t]):Index_List[t+1]
-        C_range = (S1+1+(t-1)*S2):(S1+t*S2)
-        Scaling_R = view(Scaling, R_range)
-        AA_RS_Rt = view(AA_RS, :, R_range, :)
-        BB_RS_Rt = view(BB_RS, :, R_range, :)
-        HH12 = view(HH, C_range, 1:S1)
-        #         mul!(HH12, transpose(BB_RS_Rt), AA_RS_Rt, 1, 0)
-        @tullio HH12[i, j] = BB_RS_Rt[p, k, i] * AA_RS_Rt[p, k, j] * Scaling_R[k]
-        #         HH12 .= BB_RS_Rt' * AA_RS_Rt
-        HH[1:S1, C_range] .= transpose(HH12)
-        HH22 = view(HH, C_range, C_range)
-        #         mul!(HH22, transpose(BB_RS_Rt), BB_RS_Rt, 1, 0)
         @tullio HH22[i, j] = BB_RS_Rt[p, k, i] * BB_RS_Rt[p, k, j] * Scaling_R[k]
-        #         HH22 .= BB_RS_Rt' * BB_RS_Rt
-        #
-        GG2 = view(GG, C_range)
-        Residual_R = view(Residual, :, R_range)
-        @tullio GG2[j] = Residual_R[p, k] * BB_RS_Rt[p, k, j] * Scaling_R[k]
     end
-    #     display(AA_RS)
     return GG, HH
 end
 
@@ -1019,24 +919,44 @@ function Optimise!(
 )
     Beta = Radius
     LL = Loss(M, X, Index_List, Data, Encoded_Phase, Scaling, Cache = Cache)
-    GG, HH = Gradient_Hessian!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
+#     print("G-H ")
+#     @time GG, HH, AA_RS = Gradient_Hessian!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
+    #
+    GG = Cache.Gradient
+    HH = Cache.Hessian
+    Gradient_Hessian_New!(GG, HH, Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
+    #
+#     JJ = ForwardDiff.jacobian(x -> Evaluate(M, x, Index_List, Data, Encoded_Phase), X)
+#     JJS = reshape(JJ, size(Data)..., :)
+#     @tullio HH_New[i, j] := JJS[p, k, i] * JJS[p, k, j] * Scaling[k]
+#     S1 = prod(size(X.WW))
+#     HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
+#     HH11_New = reshape(view(HH_New, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
+#     HH12 = view(HH, S1+1:size(HH, 1), 1:S1)
+#     HH12_New = view(HH_New, S1+1:size(HH_New, 1), 1:S1)
+#     HH22 = view(HH, S1+1:size(HH, 1), S1+1:size(HH, 2))
+#     HH22_New = view(HH_New, S1+1:size(HH_New, 1), S1+1:size(HH_New, 2))
+#     @show norm(HH - HH_New)
+#     @show norm(HH11 - HH11_New), norm(HH12 - HH12_New), norm(HH22 - HH22_New)
+#     display(HH)
+#     display(HH2)
+#     display(HH_New)
+#     sdfgsadf()
+#     display(HH)
+#     display(HH_New)
+#     display(HH11)
+#     display(HH11_New)
+#     jhgkjh()
     XC = deepcopy(X)
     while true
-        #         if check
-        #             JJ = ForwardDiff.jacobian(x -> Evaluate(M, x, Index_List, Data, Encoded_Phase), X)
-        #             JJS = reshape(JJ, size(Data)..., :)
-        #             @tullio HH2[i, j] := JJS[p, k, i] * JJS[p, k, j] * Scaling[k]
-        #             @show norm(HH - HH2)
-        #             display(HH)
-        #             display(JJ)
-        #             return nothing
-        #         end
-        #         @show Beta
+        print("->")
         DD = Diagonal(0.1 .+ diag(HH))
         XC .= X .- (HH + Beta * DD) \ GG
         Evaluate!(Cache.Values, Cache.Monomials, M, XC, Index_List, Data, Encoded_Phase)
+#         print("1 ")
         Cache.Residual .= Cache.Values .- Data
         LL2 = Loss(M, XC, Index_List, Data, Encoded_Phase, Scaling, Cache = Cache)
+#         print("2 ", LL2, " ")
         #         @show LL2
         #         println("Beta = ", Beta, " Loss = ", LL2, " Starting Loss = ", LL)
         if LL2 < 0.875 * LL
@@ -1222,49 +1142,6 @@ function Optimise_IC_Full!(
     end
     return Trust_Radius
 end
-
-# function Gradient_IC!(GG, M::MultiStep_Model, X, Index_List, Data, Encoded_Phase, Scaling; Cache::MultiStep_Model_Cache)
-#     Evaluate_Jacobian_Step_One!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
-#     BB_RS = Cache.Forward_Jac
-#     Residual = Cache.Residual
-#     NT = length(Index_List) - 1
-#     GG2 = reshape(GG, size(Data, 1), NT)
-#     for t in 1:NT
-#         R_range = 1 + Index_List[t] : Index_List[t+1]
-#         Scaling_R = view(Scaling, R_range)
-#         BB_RS_Rt = view(BB_RS, :, R_range, :)
-#         # Gradient
-#         Residual_R = view(Residual, :, R_range)
-#         GG2_R = view(GG2, :, t)
-#         @tullio GG2_R[j] = Residual_R[p, k] * BB_RS_Rt[p, k, j] * Scaling_R[k]
-#     end
-#     return GG
-# end
-#
-# function Hessian_IC!(HH, M::MultiStep_Model, X, Index_List, Data, Encoded_Phase, Scaling; Cache::MultiStep_Model_Cache)
-#     Evaluate_Jacobian_Step_One!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
-#     BB_RS = Cache.Forward_Jac
-#     Residual = Cache.Residual
-#     NT = length(Index_List) - 1
-#     HH22 = reshape(HH, size(Data, 1), NT, size(Data, 1), NT)
-#     for t in 1:NT
-#         R_range = 1 + Index_List[t] : Index_List[t+1]
-#         Scaling_R = view(Scaling, R_range)
-#         BB_RS_Rt = view(BB_RS, :, R_range, :)
-#         # Hessian
-#         HH22_R = view(HH22, :, t, :, t)
-#         @tullio HH22_R[i, j] = BB_RS_Rt[p, k, i] * BB_RS_Rt[p, k, j] * Scaling_R[k]
-#     end
-#     return HH
-# end
-#
-# function Optimise_IC_New!(M::MultiStep_Model, X, Index_List, Data, Encoded_Phase, Scaling; Cache::MultiStep_Model_Cache = Make_Cache(M, X, Index_List, Data, Encoded_Phase, Scaling), check=false, Radius = 0, Maximum_Radius = 4 * sqrt(manifold_dimension(M)), Iterations=32)
-#     loss = x -> Loss(M, ArrayPartition(X.WW, reshape(x, size(X.IC)...)), Index_List, Data, Encoded_Phase, Scaling; Cache=Cache)
-#     grad! = (g, x) -> Gradient_IC!(g, M, ArrayPartition(X.WW, reshape(x, size(X.IC)...)), Index_List, Data, Encoded_Phase, Scaling; Cache=Cache)
-#     hess! = (h, x) -> Hessian_IC!(h, M, ArrayPartition(X.WW, reshape(x, size(X.IC)...)), Index_List, Data, Encoded_Phase, Scaling; Cache=Cache)
-#     res = Optim.optimize(loss, grad!, hess!, vec(X.IC), method=NewtonTrustRegion())
-#     return res
-# end
 
 function Test_Jacobian(M::MultiStep_Model, X, Index_List, Data, Encoded_Phase, JJR)
     Values = zeros(eltype(X), size(Data)...)

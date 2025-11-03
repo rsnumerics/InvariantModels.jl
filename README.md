@@ -28,7 +28,7 @@ There are two other papers that explain the background of the methods.
  
 Paper [4] introduced the idea of using invariant foliations for reduced order modelling, paper [3] has shown that only invariant foliations can be used for genuine data-driven reduced order modelling (when we classify all possible methods into: a) autoencoders, b) invariant foliations, c) invariant manifolds, d) equation-free models.
 
-There are a number of example
+There are a number of examples
 
   * [Shaw-Pierre model](Examples/Shaw-Pierre_Oblique)
   * [Car following traffic model](Examples/Car_Follow)
@@ -36,5 +36,6 @@ There are a number of example
   * [Brake-Reuss beam experiment](Examples/Brake-Reuss_Beam)
   * [Titanium beam experiment](Examples/Gravity_Beam)
   * [A ten-dimensional synthetic example](Examples/Ten-Dimensional)
+  * [A building structure](Examples/Ten-Dimensional/Building_Model)
 
 This package makes [the previous versions](https://rs1909.github.io/FMA/) [obsolete](https://github.com/rs1909/InvariantModels).
