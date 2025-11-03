@@ -36,6 +36,6 @@ There are a number of examples
   * [Brake-Reuss beam experiment](Examples/Brake-Reuss_Beam)
   * [Titanium beam experiment](Examples/Gravity_Beam)
   * [A ten-dimensional synthetic example](Examples/Ten-Dimensional)
-  * [A building structure](Examples/Ten-Dimensional/Building_Model)
+  * [A building structure](Examples/Building_Model)
 
 This package makes [the previous versions](https://rs1909.github.io/FMA/) [obsolete](https://github.com/rs1909/InvariantModels).
