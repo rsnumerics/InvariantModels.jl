@@ -9,7 +9,7 @@ using Random
 using Main.InvariantModels
 
 Name = "Building_Model"
-DATAVER = "V3"
+DATAVER = "V1"
 
 Data_Dict = JLSO.load("Data_Traces.bson")
 Time_Step = Data_Dict[:Time_Step]

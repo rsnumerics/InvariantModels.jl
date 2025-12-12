@@ -10,8 +10,8 @@ using Main.InvariantModels
 using StatsBase
 
 Name = "Building_Model"
-VER = "V3"
-DATAVER = "V3"
+VER = "V1"
+DATAVER = "V1"
 Process = true
 
 # autonomous
