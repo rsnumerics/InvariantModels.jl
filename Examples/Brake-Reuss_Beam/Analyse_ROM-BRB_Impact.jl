@@ -111,8 +111,7 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
 # E_WW, E_TT, Valid = Latent_To_Manifold(PPM, PPX, MTF, XTF, Index, Latent_Data, Encoded_Phase; Transformation=Data_Decoder ./ reshape(Data_Scale,1,1,:))
 
 # fig = Create_Plot()
-MTF_Cache = Plot_Data_Result!(
-    fig,
+MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
     PPM,
     PPX,
     MIP,
@@ -128,7 +127,9 @@ MTF_Cache = Plot_Data_Result!(
     Hz = true,
     Damping_By_Derivative = false,
 )
-# MTF_Cache, Data_Max = Plot_Data_Error!(
+# Data_Max = maximum(DATA_Error_Curves.Density_Amplitude)
+
+# MTF_Cache, Data_Max, Error_Curves_T = Plot_Data_Error!(
 #     fig,
 #     PPM,
 #     PPX,
@@ -144,16 +145,14 @@ MTF_Cache = Plot_Data_Result!(
 #     Color = Makie.wong_colors()[2],
 #     Model_IC = true,
 # )
+fig = Create_Plot()
+# Plot_Backbone_Curves!(fig, ODE_Backbone, Data_Max; Label = "ODE", Color = Makie.wong_colors()[2])
+# Plot_Backbone_Curves!(fig, MAP_Backbone, Data_Max; Label = "MAP", Color = Makie.wong_colors()[3])
+Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+# Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
 Plot_Error_Trace(fig, Index, Error_Trace#=, Test_Trace=#)
-
 Annotate_Plot!(fig)
-# axFreq = content(fig[1, 4])
-# axDamp = content(fig[1, 5])
-# xlims!(axFreq, 1.0, 1.03)
-# xlims!(axDamp, 0.0245, 0.0255)
-# ylims!(axFreq, 0, 0.5)
-# ylims!(axDamp, 0, 0.5)
-
 
 CairoMakie.activate!(type = "svg")
 save("FIGURE-$(Name)-$(VER)-I$(Index).svg", fig)
@@ -205,50 +204,64 @@ save(
 )
 GLMakie.activate!()
 
-# fig3 = Figure()
+fig3 = Figure()
+
+data = JLSO.load("RAWDATA-$(Name)-$(DATAVER).bson")
+List_of_Data        = data[:List_of_Data]
+List_of_Phases      = data[:List_of_Phases]
+
+Real_Coordinates = 1:1
+
+E_WW_Latent = E_WW_Full[Real_Coordinates, :]
+Full_Decoder = Data_Decoder[Real_Coordinates, :, :] ./ reshape(Data_Scale, 1, 1, :)
+@tullio Data_Raw[j, k] := Full_Decoder[j, p, q] * Data_Decomp[q, k] * Encoded_Phase[p, k]
+Data_Raw += Steady_State[Real_Coordinates, :] * Encoded_Phase
+
+X_Axis = range(0, step = ct.Time_Step, length = size(Data_Raw, 2))
+X_Axis_Model = range(0, step = ct.Time_Step, length = size(E_WW_Latent, 2))
 #
-# data = JLSO.load("RAWDATA-$(Name)-$(DATAVER).bson")
-# List_of_Data        = data[:List_of_Data]
-# List_of_Phases      = data[:List_of_Phases]
-# #
-# # E_WW_Latent_SS, E_TT, Valid = Latent_To_Manifold(PPM, PPX, MTF, XTF, Index, MTF_Cache.Parts[Index].Model_Cache.Values, Encoded_Phase; Transformation=Data_Decoder ./ reshape(Data_Scale,1,1,:))
-# # E_WW_Latent = E_WW_Latent_SS + Steady_State * Encoded_Phase
-# E_WW_Latent = E_WW_Full
-# Data_Raw = List_of_Data[1] - Steady_State * List_of_Phases[1]
-# X_Axis = range(0, step = ct.Time_Step, length = size(Data_Raw, 2))
-# #
-# Invalid = findall(.!Valid_Ind)
-# #
-# Rows = round(Int, sqrt(State_Dimension))
-# let it = 0
-#     for k = 1:size(E_WW_Latent, 1)
-#         ax = Makie.Axis(
-#             fig3[1+div(it, Rows), 1+mod(it, Rows)],
-#             xlabel = L"$t$ [s]",
-#             ylabel = L"z_{%$k}",
-#         )
-#         lines!(ax, X_Axis, Data_Raw[k, :], color = Makie.wong_colors()[1])
-#         it += 1
-#     end
-# end
-# #
-# let it = 0
-#     for k = 1:size(E_WW_Latent, 1)
-#         ax = content(fig3[1+div(it, Rows), 1+mod(it, Rows)])
-#         lines!(ax, X_Axis, E_WW_Latent[k, :], color = Makie.wong_colors()[2])
-#         scatter!(
-#             ax,
-#             X_Axis[Invalid],
-#             E_WW_Latent[k, Invalid],
-#             color = Makie.wong_colors()[3],
-#         )
-#         it += 1
-#     end
-# end
-# CairoMakie.activate!(type = "svg")
-# save(
-#     "FIGURE-MANIF-$(Name)-$(VER)-I$(Index).svg",
-#     fig3,
-# )
-# GLMakie.activate!()
+Invalid = findall(.!Valid_Ind)
+#
+Rows = round(Int, sqrt(size(E_WW_Latent, 1)))
+let it = 0
+    for k = 1:size(E_WW_Latent, 1)
+        ax = Makie.Axis(
+            fig3[1+div(it, Rows), 1+mod(it, Rows)],
+            xlabel = L"$t$ [s]",
+            ylabel = L"z_{%$k}",
+        )
+        lines!(ax, X_Axis, Data_Raw[k, :], color = Makie.wong_colors()[1])
+        lines!(ax, X_Axis_Model, E_WW_Latent[k, :], color = Makie.wong_colors()[2])
+        lines!(ax, X_Axis_Model, Data_Raw[k, :] - E_WW_Latent[k, :], color = :red)
+        it += 1
+    end
+end
+
+CairoMakie.activate!(type = "svg")
+save(
+    "FIGURE-MANIF-$(Name)-$(VER)-I$(Index).svg",
+    fig3,
+)
+GLMakie.activate!()
+
+JLSO.save(
+    "CURVES-$(Name)-$(VER)-I$(Index).bson",
+    #     :ODE_Backbone => ODE_Backbone,
+    #     :MAP_Backbone => MAP_Backbone,
+    :DATA_Backbone => DATA_Backbone,
+    :DATA_Error_Curves => DATA_Error_Curves,
+#     :TEST_Error_Curves => TEST_Error_Curves,
+    :Error_Trace => Error_Trace,
+#     :Test_Trace => Test_Trace,
+    :Data_Raw => Data_Raw,
+    :Data_Reconstructed => E_WW_Latent,
+    :Valid_Id => Valid_Ind,
+    :Invalid_Id => Invalid,
+    :Latent_Model => MTF_Cache.Parts[Index].Model_Cache.Values,
+    :Latent_Data => MTF_Cache.Parts[Index].Latent_Data,
+    :Index_List => Index_List,
+    :Time_Step => Time_Step,
+)
+
+
 end
