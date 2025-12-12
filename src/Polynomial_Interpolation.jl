@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 function Chebyshev_Grid_Zero(np::Integer)
     return (1 .- cos.(range(0, np - 1) .* pi / (np - 1))) / 2
 end
@@ -22,15 +24,15 @@ Creates a Chebyshev grid with `np` grid points within the interval ``[a, b]``.
 t_j = \frac{a+b}{2} + \frac{a-b}{2} \cos\frac{(j-1) \pi }{n-1},\;\; j =1,\ldots,n
 ```
 """
-function Chebyshev_Grid(np::Integer, a::T, b::T) where {T<:Number}
+function Chebyshev_Grid(np::Integer, a::T, b::T) where {T <: Number}
     return (a + b) / 2 .+ Chebyshev_Grid(np) .* ((a - b) / 2)
 end
 
 function Chebyshev_Mesh(order::Integer, intervals::Integer)
     grid = Chebyshev_Grid_Zero(order)
     mesh = zeros((order - 1) * intervals + 1)
-    for k = 1:intervals
-        mesh[(1+(k-1)*(order-1)):(1+k*(order-1))] .=
+    for k in 1:intervals
+        mesh[(1 + (k - 1) * (order - 1)):(1 + k * (order - 1))] .=
             (k - 1) / intervals .+ grid ./ intervals
     end
     return mesh
@@ -110,13 +112,13 @@ The target points are in `grid`.
 """
 function Barycentric_Interpolation_Matrix(order::Integer, mesh::Vector, ti::AbstractVector)
     interp_matrix = zeros(eltype(ti), length(ti), length(mesh))
-    sparse_mesh = view(mesh, 1:(order-1):length(mesh))
-    for k = 2:length(sparse_mesh)
-        mesh_range = (1+(k-2)*(order-1)):(1+(k-1)*(order-1))
+    sparse_mesh = view(mesh, 1:(order - 1):length(mesh))
+    for k in 2:length(sparse_mesh)
+        mesh_range = (1 + (k - 2) * (order - 1)):(1 + (k - 1) * (order - 1))
         idx = ifelse(
             k == 2,
-            findall(x -> ((x >= sparse_mesh[k-1]) && (x <= sparse_mesh[k])), ti),
-            findall(x -> ((x > sparse_mesh[k-1]) && (x <= sparse_mesh[k])), ti),
+            findall(x -> ((x >= sparse_mesh[k - 1]) && (x <= sparse_mesh[k])), ti),
+            findall(x -> ((x > sparse_mesh[k - 1]) && (x <= sparse_mesh[k])), ti),
         )
         interp_matrix[idx, mesh_range] .=
             Barycentric_Interpolation_Matrix(mesh[mesh_range], ti[idx])
@@ -135,7 +137,7 @@ function Barycentric_Differentiation_Matrix(t::AbstractVector)
             D[i, j] = temp
             Dsum += temp
         end
-        for j = (i+1):np
+        for j in (i + 1):np
             temp = (weights[j] / weights[i]) / (t[i] - t[j])
             D[i, j] = temp
             Dsum += temp
@@ -149,20 +151,20 @@ end
 # on the grid 't' scale to the interval [a, b]
 # order is order - 1
 function Chebyshev_Evalation_Matrix!(
-    result,
-    t::AbstractVector,
-    order::Integer,
-    a::Number,
-    b::Number,
-)
+        result,
+        t::AbstractVector,
+        order::Integer,
+        a::Number,
+        b::Number,
+    )
     ti = (t .- (a + b) / 2) ./ ((b - a) / 2)
-    for k = 1:order
+    for k in 1:order
         if k == 1
             result[:, k] .= 1
         elseif k == 2
             result[:, k] .= ti
         else
-            result[:, k] .= 2 * ti .* result[:, k-1] - result[:, k-2]
+            result[:, k] .= 2 * ti .* result[:, k - 1] - result[:, k - 2]
         end
     end
     return result
@@ -181,7 +183,7 @@ end
 
 function Chebyshev_Derivative(order)
     D = zeros(order, order)
-    for k = 1:order
+    for k in 1:order
         if k == 1
             D[k, range(k + 1, order, step = 2)] .= range(k, order - 1, step = 2)
         else
@@ -193,7 +195,7 @@ end
 
 function Clenshaw_Curtis_Matrix(order)
     np = order - 1
-    result = [(-1)^k * 2 * cos(pi * j * k / np) / np for k = 0:np, j = 0:np]
+    result = [(-1)^k * 2 * cos(pi * j * k / np) / np for k in 0:np, j in 0:np]
     result[:, 1] .*= 0.5
     result[:, end] .*= 0.5
     result[1, :] .*= 0.5
@@ -204,14 +206,14 @@ end
 function Clenshaw_Interpolate(t::AbstractVector, order::Integer, mesh::Vector)
     ITP = zeros(eltype(t), length(t), length(mesh))
     DTP = zeros(eltype(t), length(t), length(mesh))
-    sparse_mesh = view(mesh, 1:(order-1):length(mesh))
+    sparse_mesh = view(mesh, 1:(order - 1):length(mesh))
     DD = Chebyshev_Derivative(order)
-    for k = 2:length(sparse_mesh)
-        mesh_range = (1+(k-2)*(order-1)):(1+(k-1)*(order-1))
+    for k in 2:length(sparse_mesh)
+        mesh_range = (1 + (k - 2) * (order - 1)):(1 + (k - 1) * (order - 1))
         start = ifelse(
             k == 2,
-            findfirst(x -> (x >= sparse_mesh[k-1]), t),
-            findfirst(x -> (x > sparse_mesh[k-1]), t),
+            findfirst(x -> (x >= sparse_mesh[k - 1]), t),
+            findfirst(x -> (x > sparse_mesh[k - 1]), t),
         )
         fin = findlast(x -> (x <= sparse_mesh[k]), t)
         if isnothing(start) || isnothing(fin)
@@ -221,13 +223,13 @@ function Clenshaw_Interpolate(t::AbstractVector, order::Integer, mesh::Vector)
         MM_TT = Chebyshev_Evalation_Matrix(
             t[start:fin],
             order,
-            sparse_mesh[k-1],
+            sparse_mesh[k - 1],
             sparse_mesh[k],
         )
         I_MM_ID = Clenshaw_Curtis_Matrix(order)
         ITP[start:fin, mesh_range] .= MM_TT * I_MM_ID
         DTP[start:fin, mesh_range] .=
-            (2 / (sparse_mesh[k] - sparse_mesh[k-1])) * MM_TT * DD * I_MM_ID
+            (2 / (sparse_mesh[k] - sparse_mesh[k - 1])) * MM_TT * DD * I_MM_ID
     end
     return ITP, DTP
 end

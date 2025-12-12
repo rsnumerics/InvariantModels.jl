@@ -1,9 +1,5 @@
 # SPDX-License-Identifier: EUPL-1.2
 
-# (Linear, Nonlinear)
-# Linear: Array_Stiefel, Mean_Stiefel, Stiefel_Oblique
-# Nonlinear: Full, Projected, Local
-
 """
     @enum Encoder_Linear_Type begin
         Encoder_Fixed = 0
@@ -59,14 +55,14 @@ Encoder_Nonlinear_Type
 end
 
 struct QPEncoder{
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-} <: AbstractDecoratorManifold{𝔽}
+        Latent_Dimension,
+        State_Dimension,
+        Skew_Dimension,
+        Encoder_Order,
+        Linear_Type,
+        Nonlinear_Type,
+        𝔽,
+    } <: AbstractDecoratorManifold{𝔽}
     Orthogonal_Indices::Any
     manifold::ProductManifold{𝔽}
 end
@@ -75,14 +71,23 @@ end
 @inline Base.length(M::QPEncoder) = length(M.manifold.manifolds)
 @inline ManifoldsBase.decorated_manifold(M::QPEncoder) = M.manifold
 @inline ManifoldsBase.get_forwarding_type(::QPEncoder, ::Any) = ManifoldsBase.SimpleForwardingType()
-@inline ManifoldsBase.get_forwarding_type(::QPEncoder, ::Any, _) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::QPEncoder, ::Any, P::Type) = ManifoldsBase.SimpleForwardingType()
 
 function Is_Linear_Fixed(Linear_Type::Encoder_Linear_Type)
     return ((Linear_Type == Encoder_Fixed) || (Linear_Type == Encoder_Orthogonal))
 end
 
 function Is_Linear_Fixed(
-    MF::QPEncoder{
+        MF::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -90,17 +95,34 @@ function Is_Linear_Fixed(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     return Is_Linear_Fixed(Linear_Type)
+end
+
+function Is_Mean_Stiefel(Linear_Type::Encoder_Linear_Type)
+    return Linear_Type == Encoder_Mean_Stiefel
+end
+
+function Is_Mean_Stiefel(
+        MF::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+    ) where {
+        Latent_Dimension,
+        State_Dimension,
+        Skew_Dimension,
+        Encoder_Order,
+        Linear_Type,
+        Nonlinear_Type,
+        𝔽,
+    }
+    return Is_Mean_Stiefel(Linear_Type)
 end
 
 function Is_Orthogonal(Linear_Type::Encoder_Linear_Type)
@@ -108,7 +130,16 @@ function Is_Orthogonal(Linear_Type::Encoder_Linear_Type)
 end
 
 function Is_Orthogonal(
-    MF::QPEncoder{
+        MF::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -116,16 +147,7 @@ function Is_Orthogonal(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     return Is_Orthogonal(Linear_Type)
 end
 
@@ -136,7 +158,16 @@ function Is_Model_Autonomous(Linear_Type::Encoder_Linear_Type)
 end
 
 function Is_Model_Autonomous(
-    MF::QPEncoder{
+        MF::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -144,40 +175,31 @@ function Is_Model_Autonomous(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     return Is_Model_Autonomous(Linear_Type)
 end
 
 function Is_Dense(Nonlinear_Type::Encoder_Nonlinear_Type)
     return (
         (Nonlinear_Type == Encoder_Dense_Full) ||
-        (Nonlinear_Type == Encoder_Dense_Latent_Linear) ||
-        (Nonlinear_Type == Encoder_Dense_Local)
+            (Nonlinear_Type == Encoder_Dense_Latent_Linear) ||
+            (Nonlinear_Type == Encoder_Dense_Local)
     )
 end
 
 function QPEncoder(
-    Latent_Dimension,
-    State_Dimension,
-    Orthogonal_Indices,
-    Skew_Dimension,
-    Encoder_Order,
-    field::AbstractNumbers = ℝ;
-    node_ratio = 1.0,
-    leaf_ratio = 0.5,
-    max_rank = 24,
-    Linear_Type::Encoder_Linear_Type = Encoder_Array_Stiefel,
-    Nonlinear_Type::Encoder_Nonlinear_Type = Encoder_Compressed_Latent_Linear,
-)
+        Latent_Dimension,
+        State_Dimension,
+        Orthogonal_Indices,
+        Skew_Dimension,
+        Encoder_Order,
+        field::AbstractNumbers = ℝ;
+        node_ratio = 1.0,
+        leaf_ratio = 0.5,
+        max_rank = 24,
+        Linear_Type::Encoder_Linear_Type = Encoder_Array_Stiefel,
+        Nonlinear_Type::Encoder_Nonlinear_Type = Encoder_Compressed_Latent_Linear,
+    )
     indices = unique(sort(Orthogonal_Indices))
     @assert issubset(indices, 1:State_Dimension) "Orthogonal_Indices does not belong to 1:State_Dimension ."
 
@@ -206,75 +228,69 @@ function QPEncoder(
         # only view
         Tensor_List = [
             HTTensor(
-                vcat(Skew_Dimension, repeat([length(Orthogonal_Indices)], k)),
-                Latent_Dimension,
-                node_ratio = node_ratio,
-                leaf_ranks = max.(
-                    round.(
-                        Int,
-                        vcat(
-                            Skew_Dimension * leaf_ratio,
-                            repeat([length(Orthogonal_Indices) * leaf_ratio], k),
+                    vcat(Skew_Dimension, repeat([length(Orthogonal_Indices)], k)),
+                    Latent_Dimension,
+                    node_ratio = node_ratio,
+                    leaf_ranks = max.(
+                        round.(
+                            Int,
+                            vcat(
+                                Skew_Dimension * leaf_ratio,
+                                repeat([length(Orthogonal_Indices) * leaf_ratio], k),
+                            ),
                         ),
+                        1,
                     ),
-                    1,
-                ),
-                max_rank = max_rank,
-            ) for k = 2:Encoder_Order
+                    max_rank = max_rank,
+                ) for k in 2:Encoder_Order
         ]
     elseif Nonlinear_Type == Encoder_Compressed_Full
         # only full
         Tensor_List = [
             HTTensor(
-                vcat(Skew_Dimension, repeat([State_Dimension], k)),
-                Latent_Dimension,
-                node_ratio = node_ratio,
-                leaf_ranks = max.(
-                    round.(
-                        Int,
-                        vcat(
-                            Skew_Dimension * leaf_ratio,
-                            repeat([State_Dimension * leaf_ratio], k),
+                    vcat(Skew_Dimension, repeat([State_Dimension], k)),
+                    Latent_Dimension,
+                    node_ratio = node_ratio,
+                    leaf_ranks = max.(
+                        round.(
+                            Int,
+                            vcat(
+                                Skew_Dimension * leaf_ratio,
+                                repeat([State_Dimension * leaf_ratio], k),
+                            ),
                         ),
+                        1,
                     ),
-                    1,
-                ),
-                max_rank = max_rank,
-            ) for k = 2:Encoder_Order
+                    max_rank = max_rank,
+                ) for k in 2:Encoder_Order
         ]
     elseif Nonlinear_Type == Encoder_Compressed_Latent_Linear
         # view + (k-1) x full
         Tensor_List = [
             HTTensor(
-                vcat(
-                    Skew_Dimension,
-                    length(Orthogonal_Indices),
-                    repeat([State_Dimension], k - 1),
-                ),
-                Latent_Dimension,
-                node_ratio = node_ratio,
-                leaf_ranks = max.(
-                    round.(
-                        Int,
-                        vcat(
-                            Skew_Dimension * leaf_ratio,
-                            length(Orthogonal_Indices) * leaf_ratio,
-                            repeat([State_Dimension * leaf_ratio], k - 1),
-                        ),
+                    vcat(
+                        Skew_Dimension,
+                        length(Orthogonal_Indices),
+                        repeat([State_Dimension], k - 1),
                     ),
-                    1,
-                ),
-                max_rank = max_rank,
-            ) for k = 2:Encoder_Order
+                    Latent_Dimension,
+                    node_ratio = node_ratio,
+                    leaf_ranks = max.(
+                        round.(
+                            Int,
+                            vcat(
+                                Skew_Dimension * leaf_ratio,
+                                length(Orthogonal_Indices) * leaf_ratio,
+                                repeat([State_Dimension * leaf_ratio], k - 1),
+                            ),
+                        ),
+                        1,
+                    ),
+                    max_rank = max_rank,
+                ) for k in 2:Encoder_Order
         ]
     end
-    if Linear_Type == Encoder_Array_Stiefel
-        M = ProductManifold(
-            SkewFunction(Latent_Dimension, Skew_Dimension),
-            ArrayStiefel(Latent_Dimension, State_Dimension, Skew_Dimension, tall = false),
-            Tensor_List...,
-        )
-    elseif Linear_Type == Encoder_Mean_Stiefel
+    if Linear_Type == Encoder_Mean_Stiefel
         M = ProductManifold(
             SkewFunction(Latent_Dimension, Skew_Dimension),
             Mean_Flat_Stiefel(Latent_Dimension, State_Dimension, Skew_Dimension),
@@ -289,6 +305,12 @@ function QPEncoder(
                 Skew_Dimension,
                 tall = false,
             ),
+            Tensor_List...,
+        )
+    else # Linear_Type == Encoder_Array_Stiefel or orthogonal
+        M = ProductManifold(
+            SkewFunction(Latent_Dimension, Skew_Dimension),
+            ArrayStiefel(Latent_Dimension, State_Dimension, Skew_Dimension, tall = false),
             Tensor_List...,
         )
     end
@@ -308,7 +330,16 @@ end
 
 # this makes sure that the Linear part is the identity for the right indices
 function Base.zero(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -316,16 +347,7 @@ function Base.zero(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     X = ArrayPartition(map(zero, M.manifold.manifolds))
     Linear_Part = X.x[2]
     Linear_Part .= 0 # zero produces random for Stiefel
@@ -343,7 +365,18 @@ function Base.zero(
 end
 
 function Slice(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Encoded_Phase,
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -351,18 +384,7 @@ function Slice(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Encoded_Phase,
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     M_List = []
     X_List = []
     for k in eachindex(X.x)
@@ -388,7 +410,19 @@ function Slice(
 end
 
 function Make_Cache(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data::Matrix,
+        Encoded_Phase::Matrix,
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -396,19 +430,7 @@ function Make_Cache(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data::Matrix,
-    Encoded_Phase::Matrix,
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     # Eval for a HTtensor takes VarArg arguments, so we can write thata, Data
     Data_View = view(Data, M.Orthogonal_Indices, :)
     if Nonlinear_Type == Encoder_Compressed_Local
@@ -445,8 +467,21 @@ function Make_Cache(
 end
 
 function Update_Cache!(
-    Cache,
-    M::QPEncoder{
+        Cache,
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data::Matrix,
+        Encoded_Phase::Matrix,
+        sel,
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -454,20 +489,7 @@ function Update_Cache!(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data::Matrix,
-    Encoded_Phase::Matrix,
-    sel,
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     Data_View = view(Data, M.Orthogonal_Indices, :)
     if length(sel) == 1
         #         println("QPEncoder update cache 1...")
@@ -530,8 +552,22 @@ function Update_Cache!(Cache, M::QPEncoder, X, Data::Matrix, Encoded_Phase::Matr
 end
 
 function Evaluate!(
-    Result,
-    M::QPEncoder{
+        Result,
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data::Matrix,
+        Encoded_Phase::Matrix;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+        Lambda = 1,
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -539,21 +575,7 @@ function Evaluate!(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data::Matrix,
-    Encoded_Phase::Matrix;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-    Lambda = 1,
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     Data_View = view(Data, M.Orthogonal_Indices, :)
     #     @time for (m, x, c) in zip(M.M.manifolds, X.x, Cache.x)
     #         @views Evaluate_Add!(Result, m, x, Encoded_Phase, Data_View, Data, Cache=c)
@@ -610,8 +632,23 @@ function Evaluate!(
 end
 
 function L0_DF_parts!(
-    DF,
-    M::QPEncoder{
+        DF,
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase,
+        Component;
+        L0,
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -619,22 +656,7 @@ function L0_DF_parts!(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase,
-    Component;
-    L0,
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     if length(Component) == 1
         #         println("L0_DF_parts! -> 1")
         return L0_DF!(
@@ -688,10 +710,25 @@ function L0_DF_parts!(
 end
 
 function L0_DF_DF_Delta_parts!(
-    DF,
-    Delta,
-    Latent_Delta,
-    M::QPEncoder{
+        DF,
+        Delta,
+        Latent_Delta,
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase,
+        Component;
+        Scaling,
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -699,22 +736,7 @@ function L0_DF_DF_Delta_parts!(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase,
-    Component;
-    Scaling,
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     if length(Component) == 1
         #         println("L0_DF_DF_Delta_parts! -> 1")
         return L0_DF_DF_Delta!(
@@ -776,8 +798,22 @@ function L0_DF_DF_Delta_parts!(
 end
 
 function Jacobian!(
-    Jac,
-    M::QPEncoder{
+        Jac,
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+        Lambda = 1,
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -785,21 +821,7 @@ function Jacobian!(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-    Lambda = 1,
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     Data_View = view(Data, M.Orthogonal_Indices, :)
     Jac_View = view(Jac, :, M.Orthogonal_Indices, :)
     Jac .= 0
@@ -827,7 +849,7 @@ function Jacobian!(
                     Lambda = Lambda,
                 )
             elseif Nonlinear_Type == Encoder_Compressed_Local
-                for d = 2:k
+                for d in 2:k
                     Jacobian_Add!(
                         Jac_View,
                         M[k],
@@ -840,7 +862,7 @@ function Jacobian!(
                     )
                 end
             elseif Nonlinear_Type == Encoder_Compressed_Full
-                for d = 2:k
+                for d in 2:k
                     Jacobian_Add!(
                         Jac,
                         M[k],
@@ -864,7 +886,7 @@ function Jacobian!(
                     Cache = Cache.x[k],
                     Lambda = Lambda,
                 )
-                for d = 3:k
+                for d in 3:k
                     Jacobian_Add!(
                         Jac,
                         M[k],
@@ -884,7 +906,20 @@ function Jacobian!(
 end
 
 function Jacobian_Test(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -892,20 +927,7 @@ function Jacobian_Test(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     Jac = zeros(Latent_Dimension, State_Dimension, size(Data, 2))
     Value = zeros(Latent_Dimension, size(Data, 2))
     Evaluate!(Value, M, X, Data, Encoded_Phase; Cache = Cache)
@@ -915,7 +937,7 @@ function Jacobian_Test(
     Jac_FD = deepcopy(Jac)
     Cache_FD = Make_Cache(M, X, Data_FD, Encoded_Phase)
     Eps = 1.0e-8
-    for k = 1:State_Dimension
+    for k in 1:State_Dimension
         Data_FD[k, :] .+= Eps
         Update_Cache!(Cache_FD, M, X, Data_FD, Encoded_Phase)
         Evaluate!(Value_FD, M, X, Data_FD, Encoded_Phase; Cache = Cache_FD)
@@ -925,22 +947,36 @@ function Jacobian_Test(
         @show Jac[:, k, 1:4]
         @show Jac_FD[:, k, 1:4]
     end
+    return
 end
 
 function Test_Loss!(
-    Result,
-    M::QPEncoder,
-    X,
-    Data::Matrix,
-    Encoded_Phase::Matrix;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-)
+        Result,
+        M::QPEncoder,
+        X,
+        Data::Matrix,
+        Encoded_Phase::Matrix;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    )
     Evaluate!(Result, M, X, Data, Encoded_Phase; Cache = Cache)
     return real(sum(Result .* Result)) / 2
 end
 
 function Test_Gradient(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -948,20 +984,7 @@ function Test_Gradient(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     L0 = zeros(Latent_Dimension, size(Data, 2))
     Result = zeros(Latent_Dimension, size(Data, 2))
     Result_FD = zeros(Latent_Dimension, size(Data, 2))
@@ -1005,10 +1028,24 @@ function Test_Gradient(
             break
         end
     end
+    return
 end
 
 function Test_Hessian(
-    M::QPEncoder{
+        M::QPEncoder{
+            Latent_Dimension,
+            State_Dimension,
+            Skew_Dimension,
+            Encoder_Order,
+            Linear_Type,
+            Nonlinear_Type,
+            𝔽,
+        },
+        X,
+        Data,
+        Encoded_Phase;
+        Cache = Make_Cache(M, X, Data, Encoded_Phase),
+    ) where {
         Latent_Dimension,
         State_Dimension,
         Skew_Dimension,
@@ -1016,20 +1053,7 @@ function Test_Hessian(
         Linear_Type,
         Nonlinear_Type,
         𝔽,
-    },
-    X,
-    Data,
-    Encoded_Phase;
-    Cache = Make_Cache(M, X, Data, Encoded_Phase),
-) where {
-    Latent_Dimension,
-    State_Dimension,
-    Skew_Dimension,
-    Encoder_Order,
-    Linear_Type,
-    Nonlinear_Type,
-    𝔽,
-}
+    }
     Scaling = rand(1, size(Data, 2))
     L0 = zeros(Latent_Dimension, size(Data, 2))
     L0_FD = zeros(Latent_Dimension, size(Data, 2))
@@ -1109,4 +1133,5 @@ function Test_Hessian(
             break
         end
     end
+    return
 end

@@ -1,14 +1,16 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 # invariance equation
 # D1 W . R + omega * D2 W + D3 W . T = F ( W )
 
 struct Polar_ODE_Manifold{
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    }
     # WW[:,1,:,:] is constant, set as initial condition
     # TT[1] is constant, set as initial condition
     # RR[1] is zero (for the origin), set as initial condition
@@ -23,24 +25,24 @@ struct Polar_ODE_Manifold{
 end
 
 function Take_Part(
-    PP::Polar_ODE_Manifold{
+        PP::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     start_index = 2 + (Intervals[1] - 1) * (Radial_Order - 1)
     final_index = 1 + Intervals[2] * (Radial_Order - 1)
     CA = ComponentArray(
@@ -52,25 +54,25 @@ function Take_Part(
 end
 
 function Set_Part!(
-    PP::Polar_ODE_Manifold{
+        PP::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+        XX_Part,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-    XX_Part,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     WW = XX_Full.WW
     RR = XX_Full.RR
     TT = XX_Full.TT
@@ -83,24 +85,24 @@ function Set_Part!(
 end
 
 function Tangent_Extend!(
-    PP::Polar_ODE_Manifold{
+        PP::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX,
+        Last_Interval::Integer,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX,
-    Last_Interval::Integer,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     Radial_Mesh = PP.Radial_Mesh
     WW = XX.WW
     RR = XX.RR
@@ -114,30 +116,30 @@ function Tangent_Extend!(
     @tullio D_WW[i, k, l] := D_MM[s] * WW[i, s, k, l]
     D_WW_R = reshape(D_WW, size(D_WW, 1), 1, size(D_WW, 2), size(D_WW, 3))
     #
-    Scaling = Radial_Mesh[(final_index+1):end] .- Radial_Mesh[final_index]
-    RR[(final_index+1):end] .= RR[final_index] .+ D_RR * Scaling
-    TT[(final_index+1):end] .= TT[final_index] .+ D_TT * Scaling
-    WW[:, (final_index+1):end, :, :] .=
+    Scaling = Radial_Mesh[(final_index + 1):end] .- Radial_Mesh[final_index]
+    RR[(final_index + 1):end] .= RR[final_index] .+ D_RR * Scaling
+    TT[(final_index + 1):end] .= TT[final_index] .+ D_TT * Scaling
+    WW[:, (final_index + 1):end, :, :] .=
         WW[:, [final_index], :, :] .+ D_WW_R .* reshape(Scaling, 1, :, 1, 1)
     return nothing
 end
 
 function Polar_ODE_Manifold(
-    M_Model::MultiStep_Model{
-        State_Dimension,
-        Skew_Dimension,
-        Start_Order,
-        End_Order,
-        Trajectories,
-    },
-    X_Model,
-    Generator,
-    Select,
-    Radial_Order,
-    Radial_Intervals,
-    Phase_Dimension,
-    Radius,
-) where {State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories}
+        M_Model::MultiStep_Model{
+            State_Dimension,
+            Skew_Dimension,
+            Start_Order,
+            End_Order,
+            Trajectories,
+        },
+        X_Model,
+        Generator,
+        Select,
+        Radial_Order,
+        Radial_Intervals,
+        Phase_Dimension,
+        Radius,
+    ) where {State_Dimension, Skew_Dimension, Start_Order, End_Order, Trajectories}
     Radial_Mesh = Chebyshev_Mesh(Radial_Order, Radial_Intervals)
     Radial_Dimension = length(Radial_Mesh)
     Beta_Grid = Fourier_Grid(Phase_Dimension)
@@ -196,29 +198,29 @@ function Polar_ODE_Manifold(
 end
 
 function Evaluate!(
-    Value,
-    Jacobian,
-    PP::Polar_ODE_Manifold{
+        Value,
+        Jacobian,
+        PP::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+        XX_Part,
+        Radius;
+        Arclength::Bool = false,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-    XX_Part,
-    Radius;
-    Arclength::Bool = false,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     WW = zeros(
         eltype(XX_Part),
         State_Dimension,
@@ -261,9 +263,9 @@ function Evaluate!(
     #
     E_Phase = zeros(Skew_Dimension, size(E_WW)[2:end]...)
     for s in axes(E_Phase, 1),
-        r in axes(E_Phase, 2),
-        p in axes(E_Phase, 3),
-        q in axes(E_Phase, 4)
+            r in axes(E_Phase, 2),
+            p in axes(E_Phase, 3),
+            q in axes(E_Phase, 4)
 
         E_Phase[s, r, p, q] = I[s, p]
     end
@@ -340,37 +342,37 @@ function Evaluate!(
         # 1.a.F
         J_F = reshape(J_F_WW_RS, :, State_Dimension, size(E_WW)[2:end]...)
         for q in axes(J_F, 5),
-            p in axes(J_F, 4),
-            j in axes(MON_LIN_R, 2),
-            r in axes(J_F, 3),
-            t in axes(J_F, 2),
-            s in axes(J_F, 1)
+                p in axes(J_F, 4),
+                j in axes(MON_LIN_R, 2),
+                r in axes(J_F, 3),
+                t in axes(J_F, 2),
+                s in axes(J_F, 1)
 
             Jac_V1_WW[s, r, p, q, t, j, p, q] = J_F[s, t, r, p, q] * MON_LIN_R[r, j]
         end
         for q in axes(E_WW, 4),
-            p in axes(E_WW, 3),
-            j in axes(D_MON_LIN_R, 2),
-            r in axes(E_WW, 2),
-            s in axes(E_WW, 1)
+                p in axes(E_WW, 3),
+                j in axes(D_MON_LIN_R, 2),
+                r in axes(E_WW, 2),
+                s in axes(E_WW, 1)
 
             Jac_V1_WW[s, r, p, q, s, j, p, q] -= D_MON_LIN_R[r, j] * E_RR[r]
         end
         for m in axes(Generator, 2),
-            q in axes(E_WW, 4),
-            p in axes(E_WW, 3),
-            j in axes(MON_LIN_R, 2),
-            r in axes(E_WW, 2),
-            s in axes(E_WW, 1)
+                q in axes(E_WW, 4),
+                p in axes(E_WW, 3),
+                j in axes(MON_LIN_R, 2),
+                r in axes(E_WW, 2),
+                s in axes(E_WW, 1)
 
             Jac_V1_WW[s, r, p, q, s, j, m, q] -= Generator[p, m] * MON_LIN_R[r, j]
         end
         for m in axes(DD_Beta, 2),
-            q in axes(E_WW, 4),
-            p in axes(E_WW, 3),
-            j in axes(MON_LIN_R, 2),
-            r in axes(E_WW, 2),
-            s in axes(E_WW, 1)
+                q in axes(E_WW, 4),
+                p in axes(E_WW, 3),
+                j in axes(MON_LIN_R, 2),
+                r in axes(E_WW, 2),
+                s in axes(E_WW, 1)
 
             Jac_V1_WW[s, r, p, q, s, j, p, m] -= DD_Beta[q, m] * MON_LIN_R[r, j] * E_TT[r]
         end
@@ -462,19 +464,19 @@ The input arguments are
     About the steady state the manifold is non-hyperbolic and therefore numerically challenging to calculate.
 """
 function Find_ODE_Manifold(
-    MM::MultiStep_Model{State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories},
-    MX,
-    Generator,
-    Select;
-    Radial_Order,
-    Radial_Intervals,
-    Radius,
-    Phase_Dimension,
-    abstol = 1e-9,
-    reltol = 1e-9,
-    maxiters = 12,
-    initial_maxiters = 200,
-) where {State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories}
+        MM::MultiStep_Model{State_Dimension, Skew_Dimension, Start_Order, End_Order, Trajectories},
+        MX,
+        Generator,
+        Select;
+        Radial_Order,
+        Radial_Intervals,
+        Radius,
+        Phase_Dimension,
+        abstol = 1.0e-9,
+        reltol = 1.0e-9,
+        maxiters = 12,
+        initial_maxiters = 200,
+    ) where {State_Dimension, Skew_Dimension, Start_Order, End_Order, Trajectories}
     MP, XP = Polar_ODE_Manifold(
         MM,
         MX,
@@ -486,7 +488,7 @@ function Find_ODE_Manifold(
         Radius,
     )
 
-    for it = 1:Radial_Intervals
+    for it in 1:Radial_Intervals
         println(
             "ODE: Interval = ",
             it,
@@ -523,23 +525,23 @@ function Find_ODE_Manifold(
 end
 
 function Curves(
-    PM::Polar_ODE_Manifold{
+        PM::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX;
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     last_index = findlast(!isnan, XX.RR)
     Radial_Mesh = PM.Radial_Mesh[1:last_index]
     WW1 = zeros(eltype(XX), State_Dimension, last_index, Skew_Dimension, Phase_Dimension)
@@ -563,40 +565,41 @@ function Curves(
     return RR, TT, AA
 end
 
-function Plot_Model_Result!(
-    fig,
-    PM::Polar_ODE_Manifold{
+function Model_Result(
+        PM::Polar_ODE_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        PX;
+        Hz = false,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    PX;
-    Label = "ODE Model",
-    Color = Makie.wong_colors()[3],
-    Hz = false,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     #
-    axDense = content(fig[1, 1])
-    axErr = content(fig[1, 2])
-    axFreq = content(fig[1, 4])
-    axDamp = content(fig[1, 5])
+    #     axDense = content(fig[1, 1])
+    #     axErr = content(fig[1, 2])
+    #     axFreq = content(fig[1, 4])
+    #     axDamp = content(fig[1, 5])
     #
     RR, TT, AA = Curves(PM, PX)
     if Hz
-        lines!(axFreq, TT ./ (2 * pi), AA, label = Label, color = Color)
+        Frequency = TT ./ (2 * pi)
+        #         lines!(axFreq, Frequency, AA, label = Label, color = Color)
     else
-        lines!(axFreq, TT, AA, label = Label, color = Color)
+        Frequency = TT
+        #         lines!(axFreq, Frequency, AA, label = Label, color = Color)
     end
-    lines!(axDamp, -RR ./ TT, AA, label = Label, color = Color)
-    return fig
+    Damping_Ratio = -RR ./ TT
+    #     lines!(axDamp, -RR ./ TT, AA, label = Label, color = Color)
+    Backbone_Curves = (Amplitude = AA, Frequency = Frequency, Damping_Ratio = Damping_Ratio, Hz = Hz)
+    return Backbone_Curves
 end

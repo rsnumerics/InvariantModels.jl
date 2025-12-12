@@ -8,23 +8,28 @@ function ArrayStiefelOblique(Rows::Int, Columns::Int, Skew_Dimension::Int; field
     if tall
         #         manifold = ProductManifold(Stiefel(Rows, Columns, field), PowerManifold(Oblique(Rows, Columns, field), Skew_Dimension-1))
         manifold = ProductManifold(
-            Stiefel(Rows, Columns, field), PowerManifold(Euclidean(Rows, Columns, field = field), Skew_Dimension - 1))
+            Stiefel(Rows, Columns, field), PowerManifold(Euclidean(Rows, Columns, field = field), Skew_Dimension - 1)
+        )
     else
         #         manifold = ProductManifold(Stiefel(Columns, Rows, field), PowerManifold(Oblique(Columns, Rows, field), Skew_Dimension-1))
         manifold = ProductManifold(
-            Stiefel(Columns, Rows, field), PowerManifold(Euclidean(Columns, Rows, field = field), Skew_Dimension - 1))
+            Stiefel(Columns, Rows, field), PowerManifold(Euclidean(Columns, Rows, field = field), Skew_Dimension - 1)
+        )
     end
     return ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, field}(manifold)
 end
 
 @inline ManifoldsBase.decorated_manifold(M::ArrayStiefelOblique) = M.manifold
 @inline ManifoldsBase.get_forwarding_type(::ArrayStiefelOblique, ::Any) = ManifoldsBase.SimpleForwardingType()
-@inline ManifoldsBase.get_forwarding_type(::ArrayStiefelOblique, ::Any, _) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefelOblique, ::Any, P::Type) = ManifoldsBase.SimpleForwardingType()
 
 @inline ManifoldsBase.default_retraction_method(M::ArrayStiefelOblique) = default_retraction_method(M.manifold)
 
-function Base.zero(M::ArrayStiefelOblique{
-        Rows, Columns, Skew_Dimension, tall, field}) where {Rows, Columns, Skew_Dimension, tall, field}
+function Base.zero(
+        M::ArrayStiefelOblique{
+            Rows, Columns, Skew_Dimension, tall, field,
+        }
+    ) where {Rows, Columns, Skew_Dimension, tall, field}
     if tall
         return zeros(Rows, Columns, Skew_Dimension)
     else
@@ -50,8 +55,10 @@ function ManifoldsBase.submanifold_component(X::Array{T, 3}, i) where {T}
     end
 end
 
-function Make_Cache(M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽},
-        X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Make_Cache(
+        M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽},
+        X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show size(X), size(Phase)
@@ -60,8 +67,10 @@ function Make_Cache(M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 
     return (Result_Matrix, Result_Value)
 end
 
-function Update_Cache!(Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽},
-        X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Update_Cache!(
+        Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽},
+        X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     Result_Matrix, Result_Value = Cache
@@ -70,8 +79,10 @@ function Update_Cache!(Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimensi
     return nothing
 end
 
-function Make_Cache(M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽},
-        X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Make_Cache(
+        M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show size(X), size(Phase)
@@ -81,8 +92,10 @@ function Make_Cache(M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false,
     return (Result_Matrix, Result_Value)
 end
 
-function Update_Cache!(Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽},
-        X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Update_Cache!(
+        Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     Result_Matrix, Result_Value = Cache
@@ -91,20 +104,26 @@ function Update_Cache!(Cache, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimensi
     return nothing
 end
 
-function Evaluate!(Result, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
+function Evaluate!(
+        Result, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
     Result .= Cache[2]
     return nothing
 end
 
-function Evaluate_Add!(Result, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
+function Evaluate_Add!(
+        Result, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, tall, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
     Result .+= Cache[2]
     return nothing
 end
 
-function L0_DF!(DF, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽}, X, Data::Vararg{AbstractMatrix{T}};
-        L0, Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+function L0_DF!(
+        DF, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, true, 𝔽}, X, Data::Vararg{AbstractMatrix{T}};
+        L0, Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -114,7 +133,8 @@ end
 
 function L0_DF!(
         DF, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X, Data::Vararg{AbstractMatrix{T}};
-        L0, Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+        L0, Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -122,18 +142,22 @@ function L0_DF!(
     return nothing
 end
 
-function Scaled_Hessian!(HH, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X,
-        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+function Scaled_Hessian!(
+        HH, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X,
+        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     Id = Diagonal(I, size(X, 2))
-    @tullio HH[p1, i1, q1, p2, i2, q2] = Id[i1, i2] * Scaling[k] * Data_State[p1, k] * Phase[q1, k] *
-                                         Data_State[p2, k] * Phase[q2, k]
+    return @tullio HH[p1, i1, q1, p2, i2, q2] = Id[i1, i2] * Scaling[k] * Data_State[p1, k] * Phase[q1, k] *
+        Data_State[p2, k] * Phase[q2, k]
 end
 
 # CALCULATE HH[p1, i1, q1, p2, i2, q2] = L0[i1, i2, k] * Data_State[p1, k] * Phase[q1, k]* Data_State[p2, k] * Phase[q2, k]
-function L0_DF_DF_Delta!(DF, Delta, Latent_Delta, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X,
-        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+function L0_DF_DF_Delta!(
+        DF, Delta, Latent_Delta, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X,
+        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
 
@@ -152,8 +176,10 @@ function riemannian_Hessian!(M::ArrayStiefelOblique, Y, p, eG, eH, X)
     return Y
 end
 
-function Jacobian_Add!(Jac, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Jacobian_Add!(
+        Jac, M::ArrayStiefelOblique{Rows, Columns, Skew_Dimension, false, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Jac .+= Cache[1]
-    nothing
+    return nothing
 end

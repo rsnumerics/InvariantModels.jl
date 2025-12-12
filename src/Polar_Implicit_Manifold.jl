@@ -1,11 +1,13 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 struct Polar_Implicit_Manifold{
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    }
     # WW[:,1,:,:] is constant, set as initial condition
     # TT[1] is constant, set as initial condition
     # RR[1] is zero (for the origin), set as initial condition
@@ -18,24 +20,24 @@ struct Polar_Implicit_Manifold{
 end
 
 function Take_Part(
-    PP::Polar_Implicit_Manifold{
+        PP::Polar_Implicit_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     start_index = 2 + (Intervals[1] - 1) * (Radial_Order - 1)
     final_index = 1 + Intervals[2] * (Radial_Order - 1)
     XX_Part = deepcopy(XX_Full[:, start_index:final_index, :, :])
@@ -43,14 +45,14 @@ function Take_Part(
 end
 
 function Find_Implicit_Tangent(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Torus,
-    Index,
-    Phase_Dimension;
-    Latent_Transformation = Diagonal(I, 2),
-    Radii = ones(2),
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        Torus,
+        Index,
+        Phase_Dimension;
+        Latent_Transformation = Diagonal(I, 2),
+        Radii = ones(2),
+    ) where {M, State_Dimension, Skew_Dimension}
     Beta_Grid = Fourier_Grid(Phase_Dimension)
     Latent_Indices = MTF.Indices[Index]
     Latent_Extended = zeros(eltype(XTF), State_Dimension, Skew_Dimension, Phase_Dimension)
@@ -65,7 +67,7 @@ function Find_Implicit_Tangent(
     end
     Encoded_Phase = diagm(ones(Skew_Dimension))
     Jac_Full = zeros(eltype(Torus), State_Dimension, State_Dimension, Skew_Dimension)
-    for k = 1:M
+    for k in 1:M
         Jacobian!(
             view(Jac_Full, MTF.Indices[k], :, :),
             MTF[k][2],
@@ -88,15 +90,15 @@ function Find_Implicit_Tangent(
 end
 
 function Polar_Implicit_Manifold(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Index,
-    Radial_Order,
-    Radial_Intervals,
-    Phase_Dimension,
-    Radius;
-    Latent_Data = Diagonal(I, 2),        #         Transformation = Diagonal(I, 2), Radii = ones(2)
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        Index,
+        Radial_Order,
+        Radial_Intervals,
+        Phase_Dimension,
+        Radius;
+        Latent_Data = Diagonal(I, 2),        #         Transformation = Diagonal(I, 2), Radii = ones(2)
+    ) where {M, State_Dimension, Skew_Dimension}
     F = svd(Latent_Data * Latent_Data')
     Latent_Embed = F.Vt * Latent_Data
     Radii = vec(maximum(abs.(Latent_Embed), dims = 2))
@@ -146,17 +148,17 @@ function Polar_Implicit_Manifold(
 end
 
 function Evaluate!(
-    Value,
-    Jacobian,
-    PP::Polar_Implicit_Manifold,
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-    XX_Part,
-    MTF::Multi_Foliation,
-    XTF,
-    Select;
-    Lambda = 1,
-)
+        Value,
+        Jacobian,
+        PP::Polar_Implicit_Manifold,
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+        XX_Part,
+        MTF::Multi_Foliation,
+        XTF,
+        Select;
+        Lambda = 1,
+    )
     return Evaluate!(
         Value,
         Jacobian,
@@ -172,31 +174,31 @@ function Evaluate!(
 end
 
 function Evaluate!(
-    Value,
-    Jacobian,
-    PP::Polar_Implicit_Manifold{
+        Value,
+        Jacobian,
+        PP::Polar_Implicit_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+        XX_Part,
+        Evaluate_First!::Function,
+        Evaluate_Second!::Function,
+        Jacobian_First!::Function,
+        Jacobian_Second!::Function,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-    XX_Part,
-    Evaluate_First!::Function,
-    Evaluate_Second!::Function,
-    Jacobian_First!::Function,
-    Jacobian_Second!::Function,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     Radius = PP.Radius
     Latent_Transformation = PP.Latent_Transformation
     Radii = PP.Radii
@@ -315,11 +317,11 @@ function Evaluate!(
         )
         J_V1 = reshape(J_V1_E_WW_RS, :, State_Dimension, size(E_WW)[2:end]...)
         for l in axes(J_V1, 5),
-            k in axes(J_V1, 4),
-            j in axes(J_V1, 3),
-            a in axes(J_V1, 2),
-            p in axes(J_V1, 1),
-            b in axes(MON_LIN_R, 2)
+                k in axes(J_V1, 4),
+                j in axes(J_V1, 3),
+                a in axes(J_V1, 2),
+                p in axes(J_V1, 1),
+                b in axes(MON_LIN_R, 2)
 
             Jac_V1_WW[p, j, k, l, a, b, k, l] += J_V1[p, a, j, k, l] * MON_LIN_R[j, b]
         end
@@ -337,11 +339,11 @@ function Evaluate!(
         Jac_V2_WW .= 0
         J_V2 = reshape(J_V2_E_WW_RS, :, State_Dimension, size(E_WW)[2:end]...)
         for l in axes(J_V2, 5),
-            k in axes(J_V2, 4),
-            j in axes(J_V2, 3),
-            a in axes(J_V2, 2),
-            p in axes(J_V2, 1),
-            b in axes(MON_LIN_R, 2)
+                k in axes(J_V2, 4),
+                j in axes(J_V2, 3),
+                a in axes(J_V2, 2),
+                p in axes(J_V2, 1),
+                b in axes(MON_LIN_R, 2)
 
             Jac_V2_WW[p, j, k, l, a, b, k, l] += J_V2[p, a, j, k, l] * MON_LIN_R[j, b]
         end
@@ -361,24 +363,24 @@ function Evaluate!(
 end
 
 function Tangent_Extend!(
-    PP::Polar_Implicit_Manifold{
+        PP::Polar_Implicit_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX,
+        Last_Interval::Integer,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX,
-    Last_Interval::Integer,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     Radial_Mesh = PP.Radial_Mesh
     WW = XX
     #
@@ -388,32 +390,32 @@ function Tangent_Extend!(
     @tullio D_WW[i, k, l] := D_MM[s] * WW[i, s, k, l]
     D_WW_R = reshape(D_WW, size(D_WW, 1), 1, size(D_WW, 2), size(D_WW, 3))
     #
-    Scaling = Radial_Mesh[(final_index+1):end] .- Radial_Mesh[final_index]
-    WW[:, (final_index+1):end, :, :] .=
+    Scaling = Radial_Mesh[(final_index + 1):end] .- Radial_Mesh[final_index]
+    WW[:, (final_index + 1):end, :, :] .=
         WW[:, [final_index], :, :] .+ D_WW_R .* reshape(Scaling, 1, :, 1, 1)
     return nothing
 end
 
 function Set_Part!(
-    PP::Polar_Implicit_Manifold{
+        PP::Polar_Implicit_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        XX_Full,
+        Intervals::Tuple{Integer, Integer},
+        XX_Part,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    XX_Full,
-    Intervals::Tuple{Integer,Integer},
-    XX_Part,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     start_index = 2 + (Intervals[1] - 1) * (Radial_Order - 1)
     final_index = 1 + Intervals[2] * (Radial_Order - 1)
     XX_Full[:, start_index:final_index, :, :] .= reshape(
@@ -426,41 +428,41 @@ function Set_Part!(
     return nothing
 end
 
-# already in polarmanifold-cheb.jl
-# function To_Latent(MTF::Multi_Foliation, XTF, Index, Data, Encoded_Phase)
-#     Latent_Data = zeros(eltype(Data), size(XTF.x[Index].x[1].WW, 1), size(Data, 2))
-#     Evaluate!(Latent_Data, MTF[Index][2], XTF.x[Index].x[2], Data, Encoded_Phase)
-#     return Latent_Data
-# end
-
 function Embed_Manifold(
-    PM::Polar_Implicit_Manifold{
+        PM::Polar_Implicit_Manifold{
+            State_Dimension,
+            Latent_Dimension,
+            Radial_Order,
+            Radial_Dimension,
+            Phase_Dimension,
+            Skew_Dimension,
+        },
+        WW_Full,
+        Latent_Data,
+        Encoded_Phase;
+        Output_Transformation = [
+            I[i, j] for i in 1:State_Dimension, k in 1:Skew_Dimension, j in 1:State_Dimension
+        ],
+        Output_Inverse_Transformation = [],
+        Output_Scale = ones(State_Dimension),
+        Remove_Steady_State = true,
+    ) where {
         State_Dimension,
         Latent_Dimension,
         Radial_Order,
         Radial_Dimension,
         Phase_Dimension,
         Skew_Dimension,
-    },
-    WW,
-    Latent_Data,
-    Encoded_Phase;
-    Output_Transformation = [
-        I[i, j] for i = 1:State_Dimension, k = 1:Skew_Dimension, j = 1:State_Dimension
-    ],
-    Output_Inverse_Transformation = [],
-    Output_Scale = ones(State_Dimension),
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
+    }
     Radius = PM.Radius
     Latent_Transformation = PM.Latent_Transformation
     Radii = PM.Radii
+    if Remove_Steady_State
+        WW = deepcopy(WW_Full)
+        WW .-= WW[:, 1:1, :, :]
+    else
+        WW = WW_Full
+    end
     #
     Latent_Embed = transpose(Latent_Transformation) * Latent_Data
     Latent_Embed_Scaled = Diagonal(1 ./ Radii) * Latent_Embed
@@ -559,23 +561,23 @@ The input arguments are
     About the steady state the manifold is non-hyperbolic and therefore numerically challenging to calculate.
 """
 function Extract_Manifold_Embedding(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Index,
-    Data_Decomp,
-    Encoded_Phase;
-    Radial_Order,
-    Radial_Intervals,
-    Radius,
-    Phase_Dimension,
-    Output_Transformation = [],
-    Output_Inverse_Transformation = [],
-    Output_Scale,
-    abstol = 1e-9,
-    reltol = 1e-9,
-    maxiters = 24,
-    initial_maxiters = 200,
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        Index,
+        Data_Decomp,
+        Encoded_Phase;
+        Radial_Order,
+        Radial_Intervals,
+        Radius,
+        Phase_Dimension,
+        Output_Transformation = [],
+        Output_Inverse_Transformation = [],
+        Output_Scale,
+        abstol = 1.0e-9,
+        reltol = 1.0e-9,
+        maxiters = 24,
+        initial_maxiters = 200,
+    ) where {M, State_Dimension, Skew_Dimension}
     Latent_Data = To_Latent(MTF, XTF, Index, Data_Decomp, Encoded_Phase)
     #     F = svd(Latent_Data * Latent_Data')
     #     Latent_Embed = F.Vt * Latent_Data
@@ -593,7 +595,7 @@ function Extract_Manifold_Embedding(
         Latent_Data = Latent_Data,
     )
 
-    for it = 1:Radial_Intervals
+    for it in 1:Radial_Intervals
         println(
             "Implict: Interval = ",
             it,
@@ -606,9 +608,9 @@ function Extract_Manifold_Embedding(
         XIP_Part = Take_Part(MIP, XIP, Intervals)
         fun = NonlinearFunction(
             (res, u, p) ->
-                Evaluate!(res, nothing, MIP, XIP, Intervals, u, MTF, XTF, Index);
+            Evaluate!(res, nothing, MIP, XIP, Intervals, u, MTF, XTF, Index);
             jac = (J, u, p) ->
-                Evaluate!(nothing, J, MIP, XIP, Intervals, u, MTF, XTF, Index),
+            Evaluate!(nothing, J, MIP, XIP, Intervals, u, MTF, XTF, Index),
         )
         prob = NonlinearProblem(fun, XIP_Part)
         sol = solve(
@@ -645,7 +647,7 @@ function Extract_Manifold_Embedding(
         Lambda = 1,
     )
     Evaluate_Encoder_Second!(
-        view(E_ENC, (1+size(Latent_Data, 1)):size(E_ENC, 1), :),
+        view(E_ENC, (1 + size(Latent_Data, 1)):size(E_ENC, 1), :),
         MTF,
         XTF,
         Index,
@@ -655,6 +657,6 @@ function Extract_Manifold_Embedding(
     )
     println("The moment of truth")
     @show norm(Latent_Data - view(E_ENC, 1:size(Latent_Data, 1), :))
-    @show norm(view(E_ENC, (1+size(Latent_Data, 1)):size(E_ENC, 1), :))
+    @show norm(view(E_ENC, (1 + size(Latent_Data, 1)):size(E_ENC, 1), :))
     return MIP, XIP, Torus, E_WW, Latent_Data, E_ENC, AA, Valid_Ind
 end

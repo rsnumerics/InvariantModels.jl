@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 # generates
 # Output: Index_List, Data, Encoded_Phase, List_Of_Trajectories, List_Of_Phases
 #   - Index_List
@@ -19,7 +21,7 @@ function Power_Scaling(p, delta, len)
         pt = range(0, 1, length = len + 1)
         thr = floor(delta * len)
         sc1 = alpha * (1:thr) / len
-        sc2 = (((thr+1):len) / len) .^ p
+        sc2 = (((thr + 1):len) / len) .^ p
         return vcat(sc1, sc2)
     else
         return [1.0]
@@ -87,19 +89,19 @@ end
 ```
 """
 function Generate_From_ODE(
-    Vectorfield!,
-    Forcing_Map!,
-    Alpha_Map!,
-    Parameters,
-    Time_Step,
-    IC_x,
-    IC_Force,
-    IC_Alpha,
-    Trajectory_Lengths,
-)
+        Vectorfield!,
+        Forcing_Map!,
+        Alpha_Map!,
+        Parameters,
+        Time_Step,
+        IC_x,
+        IC_Force,
+        IC_Alpha,
+        Trajectory_Lengths,
+    )
     # the output
-    List_Of_Trajectories = Array{Array{Float64},1}(undef, length(Trajectory_Lengths))
-    List_Of_Phases = Array{Array{Float64},1}(undef, length(Trajectory_Lengths))
+    List_Of_Trajectories = Array{Array{Float64}, 1}(undef, length(Trajectory_Lengths))
+    List_Of_Phases = Array{Array{Float64}, 1}(undef, length(Trajectory_Lengths))
     # local variable
     Alpha_Matrix = zeros(eltype(IC_Alpha), size(IC_Alpha, 1), size(IC_Alpha, 1))
     for k in eachindex(Trajectory_Lengths)
@@ -142,19 +144,19 @@ end
 #       t2: Omega * t, the phase of external forcing
 
 function Generate_Data_From_ODE(
-    State_Dimension,
-    Vectorfield!,
-    Parameters,
-    Maximum_Initial_Condition,
-    Number_Of_Trajectories,
-    Trajectory_Length,
-    Fourier_Order,
-    Time_Step,
-    Omega;
-    Transient_Steps = 4000,
-    Steady_Steps = 100,
-    IC_Matrix = [],
-)
+        State_Dimension,
+        Vectorfield!,
+        Parameters,
+        Maximum_Initial_Condition,
+        Number_Of_Trajectories,
+        Trajectory_Length,
+        Fourier_Order,
+        Time_Step,
+        Omega;
+        Transient_Steps = 4000,
+        Steady_Steps = 100,
+        IC_Matrix = [],
+    )
     Initial_Condition = zeros(State_Dimension)
     #     Grid = getgrid(Fourier_Order)
     # hope it converges...
@@ -164,12 +166,12 @@ function Generate_Data_From_ODE(
     Time_Span = (0, Transient_Steps * Time_Step)
     ODE_Problem = ODEProblem(
         (x, y, p, t) ->
-            Vectorfield!(x, y, p, 2 * pi / Time_Step * (t - Time_Span[1]), Omega * t),
+        Vectorfield!(x, y, p, 2 * pi / Time_Step * (t - Time_Span[1]), Omega * t),
         Initial_Condition,
         Time_Span,
         Parameters,
     )
-    Solution = solve(ODE_Problem, Vern7(), abstol = 1e-8, reltol = 1e-8)
+    Solution = solve(ODE_Problem, Vern7(), abstol = 1.0e-8, reltol = 1.0e-8)
     Time_End = Time_Step * floor(Time_Span[end] / Time_Step)
     Steady_State_Sample_Times =
         range(Time_End - (Steady_Steps - 1) * Time_Step, Time_End, step = Time_Step)
@@ -193,15 +195,15 @@ function Generate_Data_From_ODE(
     display(pl)
     # End plotting
     function Out_Of_Bounds_Condition(u, t, Integrator)
-        norm(u) > 200 * maximum(Maximum_Initial_Condition)
+        return norm(u) > 200 * maximum(Maximum_Initial_Condition)
     end
     function Stop_Simulation!(Integrator)
         println("Out of bounds solution, terminating.")
-        terminate!(Integrator)
+        return terminate!(Integrator)
     end
     #
-    List_Of_Trajectories = Array{Array{Float64},1}(undef, Number_Of_Trajectories)
-    List_Of_Phases = Array{Array{Float64},1}(undef, Number_Of_Trajectories)
+    List_Of_Trajectories = Array{Array{Float64}, 1}(undef, Number_Of_Trajectories)
+    List_Of_Phases = Array{Array{Float64}, 1}(undef, Number_Of_Trajectories)
     # setting initial conditions
     Initial_Condition_Matrix = zeros(State_Dimension, Number_Of_Trajectories)
     if isempty(IC_Matrix)
@@ -209,10 +211,10 @@ function Generate_Data_From_ODE(
         Initial_Condition_Matrix .=
             Gaussian_Initial_Conditions ./
             sqrt.(sum(Gaussian_Initial_Conditions .^ 2, dims = 1)) .* reshape(
-                Power_Scaling(2 / State_Dimension, 0.1, Number_Of_Trajectories),
-                1,
-                Number_Of_Trajectories,
-            )
+            Power_Scaling(2 / State_Dimension, 0.1, Number_Of_Trajectories),
+            1,
+            Number_Of_Trajectories,
+        )
         Initial_Condition_Matrix .*= reshape(Maximum_Initial_Condition, :, 1)
     else
         Initial_Condition_Matrix .= IC_Matrix
@@ -220,7 +222,7 @@ function Generate_Data_From_ODE(
     Skew_Dimension = 2 * Fourier_Order + 1
     Grid = Fourier_Grid(Skew_Dimension)
     t0s = Grid[rand(1:Skew_Dimension, Number_Of_Trajectories)] ./ (2 * pi)
-    for j = 1:Number_Of_Trajectories
+    for j in 1:Number_Of_Trajectories
         Phase_Shift = Period * t0s[j]
         Initial_Condition .= Initial_Condition_Matrix[:, j]
         Initial_Condition .+= Steady_State(mod(Phase_Shift * Omega, 2 * pi))
@@ -257,7 +259,7 @@ function Generate_Data_From_ODE(
     Data = hcat(List_Of_Trajectories...)
     List_Of_Encoded_Phase = [
         Fourier_Interpolate(Fourier_Grid_Of_Order(Fourier_Order), ph) for
-        ph in List_Of_Phases
+            ph in List_Of_Phases
     ]
     Encoded_Phase = hcat(List_Of_Encoded_Phase...)
     #

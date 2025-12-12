@@ -1,60 +1,12 @@
-# PROCEDURE
-# 1. Cut from of the signal
-# 2. Cut tail of the signal
-# 3. Delay Embed
-# 4. Chop up trajectories into manageable length
-# 5. Pich out: Training data, Testing data
+# SPDX-License-Identifier: EUPL-1.2
 
-# for plotting frequency response
-# function FIRfreqz(b::Array, w = range(0, stop=π, length=1024))
-#     n = length(w)
-#     h = Array{eltype(b)}(undef, n)
-#     sw = 0
-#     for i = 1:n
-#         for j = 1:length(b)
-#             sw += b[j]*exp(-im*w[i])^-j
-#         end
-#         h[i] = sw
-#         sw = 0
-#     end
-#     return h
-# end
-#
-# function Bandpass_Filter(Signal, fs, low, high; Threshold=10.0)
-#     wsize = 2 ^ ceil(Int, log2(2 * fs / low))
-#     println("Window size=", wsize, " fs=", fs, " low=", low, " high=", high)
-#     Kernel = DSP.digitalfilter(DSP.Bandpass(2*low/fs, 2*high/fs), DSP.FIRWindow(DSP.Windows.hanning(wsize-1)))
-#     Result = zero(Signal)
-#     for k in axes(Signal, 1)
-#         view(Result, k,:) .= DSP.filtfilt(Kernel, Signal[k, :])
-#     end
-#     return Result
-# #     return Result[:, 1:size(Signal, 2)]
-# end
-#
-# function Highpass_Filter(Signal, fs, low)
-#     wsize = 2 ^ ceil(Int, log2(2 * fs / low))
-#     println("Window size=", wsize, " fs=", fs, " low=", low)
-#     Kernel = DSP.digitalfilter(DSP.Highpass(2*low/fs), DSP.FIRWindow(DSP.Windows.hanning(wsize-1)))
-#     Result = zero(Signal)
-#     for k in axes(Signal, 1)
-#         view(Result, k,:) .= DSP.filtfilt(Kernel, Signal[k, :])
-#     end
-#     return Result
-# end
-
-# STEP 2
-# Takes a moving average (window)
-# and cuts off the tail of each signal
-# that is less that (ratio) times the amplitude
-# of the average at the last window
 function Cut_Signals(Signals; window = 60, ratio = 2)
     moving_average(vs, n) =
-        [sum(view(vs, :, i:(i+n-1)), dims = 2) / n for i = 1:(size(vs, 2)-(n-1))]
+        [sum(view(vs, :, i:(i + n - 1)), dims = 2) / n for i in 1:(size(vs, 2) - (n - 1))]
     function amplitude(vs, mavg, n)
-        [
-            sqrt.(maximum(sum((view(vs, :, i:(i+n-1)) .- mavg[i]) .^ 2, dims = 1))) for
-            i = 1:(size(vs, 2)-(n-1))
+        return [
+            sqrt.(maximum(sum((view(vs, :, i:(i + n - 1)) .- mavg[i]) .^ 2, dims = 1))) for
+                i in 1:(size(vs, 2) - (n - 1))
         ]
     end
     cut = []
@@ -78,9 +30,9 @@ function Delay_Embed_Proper(Signals, Phases; delay = 1, skip = 1, delay_step = s
     for (traj, phase) in zip(Signals, Phases)
         Points = 1 + div(size(traj, 2) - 1 - Factor * delay_step, skip)
         D_Traj = zeros(eltype(traj), Delay_State_Dimension, Points)
-        for k = 0:Factor
+        for k in 0:Factor
             #             @show size(D_Traj[1+k*State_Dimension:(k+1)*State_Dimension, :]) , size(traj[:, range(1 + k * delay_step, step=skip, length=Points)])
-            D_Traj[(1+k*State_Dimension):((k+1)*State_Dimension), :] .=
+            D_Traj[(1 + k * State_Dimension):((k + 1) * State_Dimension), :] .=
                 traj[:, range(1 + k * delay_step, step = skip, length = Points)]
         end
         D_Phase = zeros(eltype(phase), size(phase, 1), Points)
@@ -110,8 +62,8 @@ function Delay_Embed(Signals, Phases; delay = 1, skip = 1, max_length = typemax(
         R_range = range(0, min(size(traj, 2), max_length) - Factor, step = skip)
         D_Traj = zeros(eltype(traj), Delay_State_Dimension, length(R_range))
         D_Phase = zeros(eltype(phase), size(phase, 1), length(R_range))
-        for k = 1:Factor
-            D_Traj[(1+(k-1)*State_Dimension):(k*State_Dimension), :] .= traj[:, k.+R_range]
+        for k in 1:Factor
+            D_Traj[(1 + (k - 1) * State_Dimension):(k * State_Dimension), :] .= traj[:, k .+ R_range]
         end
         D_Phase .= phase[:, 1 .+ R_range]
         push!(Delay_Signals, D_Traj)
@@ -129,9 +81,9 @@ function Chop_Signals(Signals, Phases; maxlen = 1000)
         @show chunk_size, size(traj, 2), maxlen
         S_range = range(1, size(traj, 2), step = chunk_size)
         @show length(S_range), S_range, size(traj, 2)
-        for k = 1:(length(S_range)-1)
-            push!(Chopped_Signals, view(traj, :, S_range[k]:S_range[k+1]))
-            push!(Chopped_Phases, view(phase, :, S_range[k]:S_range[k+1]))
+        for k in 1:(length(S_range) - 1)
+            push!(Chopped_Signals, view(traj, :, S_range[k]:S_range[k + 1]))
+            push!(Chopped_Phases, view(phase, :, S_range[k]:S_range[k + 1]))
         end
     end
     return Chopped_Signals, Chopped_Phases
@@ -159,9 +111,9 @@ function Bin_Cuts(Amplitudes, max_points, nbins)
     # bounds contains the bin boundaries (starting with zero)
     bounds = range(amp_min, amp_max, length = nbins + 1)
     # bins will contain the indices for the amplitudes
-    bins = Array{Array{Int,1},1}(undef, nbins)
+    bins = Array{Array{Int, 1}, 1}(undef, nbins)
     for k in eachindex(bins)
-        bins[k] = findall((Amplitudes .>= bounds[k]) .&& (Amplitudes .< bounds[k+1]))
+        bins[k] = findall((Amplitudes .>= bounds[k]) .&& (Amplitudes .< bounds[k + 1]))
     end
     # ll has the lengths of each bin
     ll = length.(bins)
@@ -174,13 +126,13 @@ function Bin_Cuts(Amplitudes, max_points, nbins)
         @show to_rem
         while to_rem > 0 && k < nbins
             # how much can be removed just by chopping
-            rem = sum(lls[1:k] .- lls[k+1])
+            rem = sum(lls[1:k] .- lls[k + 1])
             if rem <= to_rem && (k + 1) < nbins
-                lls[1:k] .= lls[k+1]
+                lls[1:k] .= lls[k + 1]
                 to_rem -= rem
             else
                 drem = div(to_rem, k + 1)
-                lls[1:(k+1)] .-= drem
+                lls[1:(k + 1)] .-= drem
                 to_rem -= (k + 1) * drem
             end
             k += 1
@@ -208,27 +160,31 @@ function Pick_Signals(Signals, ratio_train, ratio_test, nbins = 30)
     perm = randperm(length(indices))
     train = sort(indices[perm[1:max(1, min(length(perm) - 1, len_train))]])
     test = sort(
-        indices[perm[min(length(perm), len_train + 1):min(
-            length(perm),
-            len_train + len_test,
-        )]],
+        indices[
+            perm[
+                min(length(perm), len_train + 1):min(
+                    length(perm),
+                    len_train + len_test,
+                ),
+            ],
+        ],
     )
 
     return train, test
 end
 
 function Linear_Decompose(
-    Index_List,
-    Data,
-    Encoded_Phase,
-    Scaling;
-    Time_Step = 1.0,
-    Dimensions = size(Data, 1),
-    Iterations = 0,
-    Order = 1,
-    Avoid_Real = false,
-    Aut_Epsilon = 1e-3,
-)
+        Index_List,
+        Data,
+        Encoded_Phase,
+        Scaling;
+        Time_Step = 1.0,
+        Dimensions = size(Data, 1),
+        Iterations = 0,
+        Order = 1,
+        Avoid_Real = false,
+        Aut_Epsilon = 1.0e-3,
+    )
     State_Dimension = size(Data, 1)
     Skew_Dimension = size(Encoded_Phase, 1)
     Trajectories = length(Index_List) - 1
@@ -285,8 +241,8 @@ function Linear_Decompose(
     LVt, LW, Lambda, _, _, Lambda_Diagonal_C, Real_Index_Start =
         Decompose_Model_Right(BB_Linear, MM.SH; Time_Step = Time_Step)
     EV_Pre = [
-        eigvals(Lambda[(1+2*(k-1)):(2*k), (1+2*(k-1)):(2*k)]) for
-        k = 1:div(Real_Index_Start - 1, 2)
+        eigvals(Lambda[(1 + 2 * (k - 1)):(2 * k), (1 + 2 * (k - 1)):(2 * k)]) for
+            k in 1:div(Real_Index_Start - 1, 2)
     ]
     EV = vcat(EV_Pre..., diag(Lambda[Real_Index_Start:end, Real_Index_Start:end]))
     #     EV[findall(abs.(EV) .> 1)] .= eps(1.0)
@@ -297,9 +253,9 @@ function Linear_Decompose(
     display(log.(EV[Sorted[1:min(Dimensions + 1, length(Sorted))]]) ./ Time_Step)
     local Reduced_All
     if Dimensions < size(Data, 1)
-        if isapprox(abs(EV[Sorted[Dimensions]]), abs(EV[Sorted[Dimensions+1]]))
+        if isapprox(abs(EV[Sorted[Dimensions]]), abs(EV[Sorted[Dimensions + 1]]))
             println("Linear_Decompose: adding a dimension.")
-            Reduced_All = Sorted[1:(Dimensions+1)]
+            Reduced_All = Sorted[1:(Dimensions + 1)]
         else
             Reduced_All = Sorted[1:Dimensions]
         end
@@ -335,12 +291,12 @@ function Linear_Decompose(
     @tullio Data_Decomposed[i, k] :=
         LVt_Reduced[i, q, p] * Data_Var[p, k] * Encoded_Phase[q, k]
     return Data_Decomposed,
-    EV[Reduced_Indices],
-    SS,
-    LVt_Reduced,
-    LW[:, :, Reduced_Indices],
-    BB_Linear,
-    SH
+        EV[Reduced_Indices],
+        SS,
+        LVt_Reduced,
+        LW[:, :, Reduced_Indices],
+        BB_Linear,
+        SH
 end
 
 @doc raw"""
@@ -353,7 +309,7 @@ function Filter_Linear_Model(BB, Grid, order)
     BB_Filtered = zero(BB)
     BB_Filtered .+= mean(BB, dims = 2)
     Max_Order = div(length(Grid) - 1, 2)
-    for k = 1:min(order, Max_Order)
+    for k in 1:min(order, Max_Order)
         BB_Filtered .+=
             sum(reshape(cos.(k * Grid) / (length(Grid) / 2), 1, :, 1) .* BB, dims = 2) .*
             reshape(cos.(k * Grid), 1, :, 1)
@@ -388,13 +344,13 @@ its steady state is found by Newton's method and its Jacobian is calculated at t
 which is then returned as the linear model `BB_Linear`.
 """
 function Estimate_Linear_Model(
-    Index_List,
-    Data,
-    Encoded_Phase,
-    Scaling;
-    Iterations = 0,
-    Order = 1,
-)
+        Index_List,
+        Data,
+        Encoded_Phase,
+        Scaling;
+        Iterations = 0,
+        Order = 1,
+    )
     State_Dimension = size(Data, 1)
     Skew_Dimension = size(Encoded_Phase, 1)
     Trajectories = length(Index_List) - 1
@@ -411,50 +367,50 @@ function Estimate_Linear_Model(
         for it in 1:Iterations
             Trust_Radius, M_Loss, M_Grad = Optimise!(
                 MM, MX, Index_List, Data, Encoded_Phase, Scaling,
-                Cache=MM_Cache, Radius=Trust_Radius, Maximum_Radius=Maximum_Radius
+                Cache = MM_Cache, Radius = Trust_Radius, Maximum_Radius = Maximum_Radius
             )
             println(
                 "    Step=$(it). " *
-                @sprintf("time = %.1f[s] ", time() - t0) *
-                @sprintf("F(x) = %.5e ", M_Loss) *
-                @sprintf("G(x) = %.5e ", M_Grad) *
-                @sprintf("R = %.5e ", Trust_Radius)
+                    @sprintf("time = %.1f[s] ", time() - t0) *
+                    @sprintf("F(x) = %.5e ", M_Loss) *
+                    @sprintf("G(x) = %.5e ", M_Grad) *
+                    @sprintf("R = %.5e ", Trust_Radius)
             )
             if Trust_Radius >= Maximum_Radius
                 Trust_Radius = 1.0
                 return break
             end
-         end
-#         optfun = Optimization.OptimizationFunction(
-#             (x, p) -> Loss_With_Update(
-#                 MM,
-#                 x,
-#                 Index_List,
-#                 Data,
-#                 Encoded_Phase,
-#                 Scaling,
-#                 Cache = MM_Cache,
-#             ),
-#             grad = (g, x, p) -> Gradient!(
-#                 g,
-#                 MM,
-#                 x,
-#                 Index_List,
-#                 Data,
-#                 Encoded_Phase,
-#                 Scaling,
-#                 Cache = MM_Cache,
-#             ),
-#         )
-#         prob = Optimization.OptimizationProblem(optfun, MX, [])
-#         osol = Optimization.solve(
-#             prob,
-#             Optim.GradientDescent(alphaguess = 1 * eps(1.0));
-#             maxiters = Iterations,
-#         )
-#         display(osol)
-#         display(osol.stats)
-#         MX .= osol.u
+        end
+        #         optfun = Optimization.OptimizationFunction(
+        #             (x, p) -> Loss_With_Update(
+        #                 MM,
+        #                 x,
+        #                 Index_List,
+        #                 Data,
+        #                 Encoded_Phase,
+        #                 Scaling,
+        #                 Cache = MM_Cache,
+        #             ),
+        #             grad = (g, x, p) -> Gradient!(
+        #                 g,
+        #                 MM,
+        #                 x,
+        #                 Index_List,
+        #                 Data,
+        #                 Encoded_Phase,
+        #                 Scaling,
+        #                 Cache = MM_Cache,
+        #             ),
+        #         )
+        #         prob = Optimization.OptimizationProblem(optfun, MX, [])
+        #         osol = Optimization.solve(
+        #             prob,
+        #             Optim.GradientDescent(alphaguess = 1 * eps(1.0));
+        #             maxiters = Iterations,
+        #         )
+        #         display(osol)
+        #         display(osol.stats)
+        #         MX .= osol.u
     end
     #
     @time SS, BB_Linear = Find_Torus(MM, MX)
@@ -503,30 +459,32 @@ The parameter `By_Eigen` is true if the calculation is carried out by eigenvalue
 Otherwise a specially designed Hessenberg transformation and subsequent QR iteration is carried out on the vector bundles. This latter method
 """
 function Create_Linear_Decomposition(
-    BB_Filtered,
-    SH;
-    Time_Step = 1.0,
-    Reduce = false,
-    Align = true,
-    By_Eigen = false,
-)
+        BB_Filtered,
+        SH;
+        Time_Step = 1.0,
+        Reduce = false,
+        Align = true,
+        By_Eigen = false,
+        dims = size(BB_Filtered, 1),
+        maxiter = 12000,
+    )
     if By_Eigen
         Unreduced_Model,
-        Data_Encoder,
-        Data_Decoder,
-        Reduced_Model,
-        Reduced_Decoder,
-        Reduced_Encoder,
-        Bundles = Bundle_Decomposition_By_Eigenvectors(
+            Data_Encoder,
+            Data_Decoder,
+            Reduced_Model,
+            Reduced_Decoder,
+            Reduced_Encoder,
+            Bundles = Bundle_Decomposition_By_Eigenvectors(
             BB_Filtered,
             SH;
             Time_Step = Time_Step,
             sparse = false,
-            dims = size(BB_Filtered, 1),
+            dims = dims,
         )
     else
         Unreduced_Model, Data_Encoder, Data_Decoder, Bundles =
-            Bundle_Decomposition(BB_Filtered, SH; Align = Align)
+            Bundle_Decomposition(BB_Filtered, SH; Align = Align, maxiter = maxiter)
         if Reduce
             Reduced_Model, Reduced_Decoder, V_R_SH, Reduced_Encoder, W_R_SH =
                 Reduce_Bundles(Unreduced_Model, Bundles, SH)
@@ -609,16 +567,16 @@ The input arguments are
     This is helpful when the data includes slowly varying `DC` shift with high energy that would be pick by the method otherwise.
 """
 function Select_Bundles_By_Energy(
-    Index_List,
-    Data,
-    Encoded_Phase,
-    SS,
-    SH,
-    Decomp;
-    How_Many,
-    Ignore_Real = true,
-    Time_Step = 1.0,
-)
+        Index_List,
+        Data,
+        Encoded_Phase,
+        SS,
+        SH,
+        Decomp;
+        How_Many,
+        Ignore_Real = true,
+        Time_Step = 1.0,
+    )
     if Ignore_Real
         Bundles = filter(x -> (length(x) == 2), Decomp.Bundles)
     else
@@ -634,10 +592,10 @@ function Select_Bundles_By_Energy(
     Order = sortperm(Energies, rev = true)
     println("Bundles selected:")
     display(Bundles[Order[1:Limit]])
-#     println("Energies:")
-#     for k in Order[1:min(2 * Limit, length(Order))]
-#         println(Bundles[k], " -> E=", Energies[k])
-#     end
+    #     println("Energies:")
+    #     for k in Order[1:min(2 * Limit, length(Order))]
+    #         println(Bundles[k], " -> E=", Energies[k])
+    #     end
     Select = vcat(Bundles[Order[1:Limit]]...)
     if Select == range(first(Select), last(Select))
         Select = range(first(Select), last(Select))
@@ -648,8 +606,8 @@ function Select_Bundles_By_Energy(
         push!(Re_Bundles, Bundles[s] .- (Bundles[s][1] - Index))
         Index = Re_Bundles[end][end] + 1
     end
-#     println("Reconstituted bundles:")
-#     display(Re_Bundles)
+    #     println("Reconstituted bundles:")
+    #     display(Re_Bundles)
     BB_Mean = dropdims(mean(Decomp.Reduced_Model, dims = 2), dims = 2)
     println("Select_Bundles_By_Energy: Eigenvalues")
     for (bb, ee) in zip(Bundles[Order], Energies[Order])
@@ -661,9 +619,62 @@ function Select_Bundles_By_Energy(
                 " Frequency ", abs(angle(EV[1])) / Time_Step,
                 " [rad/s]; ", abs(angle(EV[1])) / (2 * pi * Time_Step),
                 " [Hz]; Damping ", -log(abs.(EV[1])) ./ abs.(angle(EV[1])),
-                )
+            )
         else
             println("[", bb[1], "]: E=", ee, " Decay rate ", real(EV[1]))
+        end
+    end
+    return (
+        Unreduced_Model = Decomp.Unreduced_Model[Select, :, Select],
+        Data_Encoder = Decomp.Data_Encoder[Select, :, :],
+        Data_Decoder = Decomp.Data_Decoder[:, :, Select],
+        Bundles = Re_Bundles,
+        Reduced_Model = Decomp.Reduced_Model[Select, :, Select],
+        Reduced_Encoder = Decomp.Reduced_Encoder[Select, :, Select],
+        Reduced_Decoder = Decomp.Reduced_Decoder[Select, :, Select],
+    )
+end
+
+function Select_Bundles(
+        Decomp;
+        How_Many,
+        Time_Step = 1.0,
+        Ignore_Real = true,
+    )
+    BB_Mean = dropdims(mean(Decomp.Reduced_Model, dims = 2), dims = 2)
+    if Ignore_Real
+        Bundles = filter(x -> (length(x) == 2), Decomp.Bundles)
+    else
+        Bundles = Decomp.Bundles
+    end
+    Data_Encoder = Decomp.Data_Encoder
+    Limit = min(length(Bundles), How_Many)
+    Order = sortperm([maximum(abs.(eigvals(BB_Mean[bb, bb]))) for bb in Bundles], rev = true)
+    Select = vcat(Bundles[Order[1:Limit]]...)
+    if Select == range(first(Select), last(Select))
+        Select = range(first(Select), last(Select))
+    end
+    Index = 1
+    Re_Bundles = []
+    for s in Order[1:Limit]
+        push!(Re_Bundles, Bundles[s] .- (Bundles[s][1] - Index))
+        Index = Re_Bundles[end][end] + 1
+    end
+    #     println("Reconstituted bundles:")
+    #     display(Re_Bundles)
+    BB_Mean = dropdims(mean(Decomp.Reduced_Model, dims = 2), dims = 2)
+    println("Select_Bundles_By_Energy: Eigenvalues")
+    for bb in Bundles[Order]
+        EV = eigvals(BB_Mean[bb, bb])
+        if length(bb) == 2
+            println(
+                "[", bb[1], "-", bb[end],
+                "]: Frequency ", abs(angle(EV[1])) / Time_Step,
+                " [rad/s]; ", abs(angle(EV[1])) / (2 * pi * Time_Step),
+                " [Hz]; Damping ", -log(abs.(EV[1])) ./ abs.(angle(EV[1])),
+            )
+        else
+            println("[", bb[1], "]: Decay rate ", real(EV[1]))
         end
     end
     return (

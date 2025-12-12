@@ -1,14 +1,16 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 function meminfo_julia()
     # @printf "GC total:  %9.3f MiB\n" Base.gc_total_bytes(Base.gc_num())/2^20
     # Total bytes (above) usually underreports, thus I suggest using live bytes (below)
     @printf "GC live:   %9.3f MiB\n" Base.gc_live_bytes() / 2^20
     @printf "JIT:       %9.3f MiB\n" Base.jit_total_bytes() / 2^20
-    @printf "Max. RSS:  %9.3f MiB\n" Sys.maxrss() / 2^20
+    return @printf "Max. RSS:  %9.3f MiB\n" Sys.maxrss() / 2^20
 end
 
 # replicates the structure of the ArrayPartition, but with single element arrays
 function Replicate(x::ArrayPartition, Element_Type = Bool, Value = zero(Element_Type))
-    ArrayPartition(
+    return ArrayPartition(
         map(x -> x isa ArrayPartition ? Replicate(x, Element_Type, Value) : [Value], x.x),
     )
 end
@@ -28,7 +30,7 @@ Describes how to scale the loss function as a function of the distance from the 
     Quadratic_Scaling = 2
 end
 
-struct Multi_Foliation{M,State_Dimension,Skew_Dimension} <: AbstractDecoratorManifold{ℂ}
+struct Multi_Foliation{M, State_Dimension, Skew_Dimension} <: AbstractDecoratorManifold{ℂ}
     manifold::ProductManifold
     Indices::Any
     Scaling_Parameter::Any
@@ -36,32 +38,32 @@ struct Multi_Foliation{M,State_Dimension,Skew_Dimension} <: AbstractDecoratorMan
 end
 
 function Multi_Foliation(
-    State_Dimension,
-    Skew_Dimension,
-    Trajectories::Int,
-    Selection::NTuple{M,Vector{Int}},
-    Model_Orders::NTuple{M,Int},
-    Encoder_Orders::NTuple{M,Int};
-    #     Linear_Model,
-    #     Linear_Encoder,
-    Scaling_Parameter = 2^(-4),
-    Scaling_Order = No_Scaling,
-    node_ratio = 0.8,
-    leaf_ratio = 0.8,
-    max_rank = 48,
-    Linear_Type::NTuple{M,Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
-    Nonlinear_Type::NTuple{M,Encoder_Nonlinear_Type} = ntuple(
-        i -> Encoder_Compressed_Latent_Linear,
-        M,
-    ),
-) where {M}
+        State_Dimension,
+        Skew_Dimension,
+        Trajectories::Int,
+        Selection::NTuple{M, Vector{Int}},
+        Model_Orders::NTuple{M, Int},
+        Encoder_Orders::NTuple{M, Int};
+        #     Linear_Model,
+        #     Linear_Encoder,
+        Scaling_Parameter = 2^(-4),
+        Scaling_Order = No_Scaling,
+        node_ratio = 0.8,
+        leaf_ratio = 0.8,
+        max_rank = 48,
+        Linear_Type::NTuple{M, Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
+        Nonlinear_Type::NTuple{M, Encoder_Nonlinear_Type} = ntuple(
+            i -> Encoder_Compressed_Latent_Linear,
+            M,
+        ),
+    ) where {M}
     Full_Selection = vcat(Selection...)
     @assert sort(Full_Selection) == sort(unique(Full_Selection)) "Err 1"
     #     @assert length(Full_Selection) == State_Dimension
-    Foliations = Array{Foliation,1}(undef, M)
-    Indices = Array{UnitRange,1}(undef, M)
+    Foliations = Array{Foliation, 1}(undef, M)
+    Indices = Array{UnitRange, 1}(undef, M)
     Last_Index = 0
-    for k = 1:M
+    for k in 1:M
         Latent_Dimension = length(Selection[k])
         Orthogonal_Indices = setdiff(1:State_Dimension, Selection[k])
         Foliations[k] = Foliation(
@@ -81,7 +83,7 @@ function Multi_Foliation(
         Indices[k] = range(Last_Index + 1, Last_Index + Latent_Dimension)
         Last_Index += Latent_Dimension
     end
-    return Multi_Foliation{M,State_Dimension,Skew_Dimension}(
+    return Multi_Foliation{M, State_Dimension, Skew_Dimension}(
         ProductManifold(Foliations...),
         Indices,
         Scaling_Parameter,
@@ -90,24 +92,24 @@ function Multi_Foliation(
 end
 
 function Re_Target(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    Linear_Type::NTuple{M,Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
-    Nonlinear_Type::NTuple{M,Encoder_Nonlinear_Type} = ntuple(
-        i -> Encoder_Compressed_Latent_Linear,
-        M,
-    ),
-) where {M,State_Dimension,Skew_Dimension}
-    Foliation_List = [MTF[k] for k = 1:length(MTF)]
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        Linear_Type::NTuple{M, Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
+        Nonlinear_Type::NTuple{M, Encoder_Nonlinear_Type} = ntuple(
+            i -> Encoder_Compressed_Latent_Linear,
+            M,
+        ),
+    ) where {M, State_Dimension, Skew_Dimension}
+    Foliation_List = [MTF[k] for k in 1:length(MTF)]
     Encoder_List = [F[2] for F in Foliation_List]
     New_Encoder_List = []
     New_Foliation_List = []
-    for k = 1:length(MTF)
+    for k in 1:length(MTF)
         Foil = MTF[k]
         Model = Foil[1]
         Enc = Foil[2]
         pars = typeof(Enc).parameters
-        New_Enc = QPEncoder{pars[1:4]...,Linear_Type[k],Nonlinear_Type[k],pars[7:end]...}(
-            [getfield(Enc, p) for p = 1:nfields(Enc)]...,
+        New_Enc = QPEncoder{pars[1:4]..., Linear_Type[k], Nonlinear_Type[k], pars[7:end]...}(
+            [getfield(Enc, p) for p in 1:nfields(Enc)]...,
         )
         println("Changing ", pars[5], " to ", Linear_Type[k], " ", Nonlinear_Type[k])
         push!(
@@ -131,38 +133,38 @@ Creates a new `Multi_Foliation` except that it will now have space for `New_Traj
 This is used to create a model to evaluate testing data that has different number of trajectories than the training data.
 """
 function Make_Similar(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    New_Trajectories::Integer,
-) where {M,State_Dimension,Skew_Dimension}
-    Foliations = Array{Foliation,1}(undef, M)
-    Parameters = Array{ArrayPartition,1}(undef, M)
-    for k = 1:M
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        New_Trajectories::Integer,
+    ) where {M, State_Dimension, Skew_Dimension}
+    Foliations = Array{Foliation, 1}(undef, M)
+    Parameters = Array{ArrayPartition, 1}(undef, M)
+    for k in 1:M
         MF, XF = Make_Similar(MTF[k], XTF.x[k], New_Trajectories)
         Foliations[k] = MF
         Parameters[k] = XF
     end
-    return Multi_Foliation{M,State_Dimension,Skew_Dimension}(
-        ProductManifold(Foliations...),
-        deepcopy(MTF.Indices),
-        deepcopy(MTF.Scaling_Parameter),
-        deepcopy(MTF.Scaling_Order),
-    ),
-    ArrayPartition(Parameters...)
+    return Multi_Foliation{M, State_Dimension, Skew_Dimension}(
+            ProductManifold(Foliations...),
+            deepcopy(MTF.Indices),
+            deepcopy(MTF.Scaling_Parameter),
+            deepcopy(MTF.Scaling_Order),
+        ),
+        ArrayPartition(Parameters...)
 end
 
 @inline Base.getindex(M::Multi_Foliation, i::Integer) = M.manifold[i]
 @inline Base.length(M::Multi_Foliation) = length(M.manifold.manifolds)
 @inline ManifoldsBase.decorated_manifold(M::Multi_Foliation) = M.manifold
 @inline ManifoldsBase.get_forwarding_type(::Multi_Foliation, ::Any) = ManifoldsBase.SimpleForwardingType()
-@inline ManifoldsBase.get_forwarding_type(::Multi_Foliation, ::Any, _) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::Multi_Foliation, ::Any, P::Type) = ManifoldsBase.SimpleForwardingType()
 
 function Base.zero(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+    ) where {M, State_Dimension, Skew_Dimension}
     println("Multi_Foliation : zero()")
     XTF = ArrayPartition(map(zero, MTF.manifold.manifolds))
-    for k = 1:M
+    for k in 1:M
         #         if Is_Oblique(MTF[k][2])
         #             @show XTF.x[k].x[2].x[2].x[1]
         #             @show XTF.x[k].x[2].x[2].x[2]
@@ -185,91 +187,101 @@ end
 In case the system is parameter dependent, this function creates an autonomous slice when the encoded parameter is `Encoded_Slice`.
 """
 function Slice(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Encoded_Slice,
-) where {M,State_Dimension,Skew_Dimension}
-    Foliations = Array{Foliation,1}(undef, M)
-    Parameters = Array{ArrayPartition,1}(undef, M)
-    for k = 1:M
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        Encoded_Slice,
+    ) where {M, State_Dimension, Skew_Dimension}
+    Foliations = Array{Foliation, 1}(undef, M)
+    Parameters = Array{ArrayPartition, 1}(undef, M)
+    for k in 1:M
         MF, XF = Slice(MTF[k], XTF.x[k], Encoded_Slice)
         Foliations[k] = MF
         Parameters[k] = XF
     end
-    return Multi_Foliation{M,State_Dimension,1}(
-        ProductManifold(Foliations...),
-        deepcopy(MTF.Indices),
-        deepcopy(MTF.Scaling_Parameter),
-        deepcopy(MTF.Scaling_Order),
-    ),
-    ArrayPartition(Parameters...)
+    return Multi_Foliation{M, State_Dimension, 1}(
+            ProductManifold(Foliations...),
+            deepcopy(MTF.Indices),
+            deepcopy(MTF.Scaling_Parameter),
+            deepcopy(MTF.Scaling_Order),
+        ),
+        ArrayPartition(Parameters...)
 end
 
-function Make_Orthogonal!(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Index,
-) where {M,State_Dimension,Skew_Dimension}
-    Latent_Dimension = typeof(MTF[Index]).parameters[2]
-    Result = zeros(
-        eltype(XTF),
-        State_Dimension,
-        State_Dimension - Latent_Dimension,
-        Skew_Dimension,
-    )
-    Previous = XTF.x[Index].x[2].x[2]
-    it::Int = 0
-    for k = 1:length(MTF)
-        if k != Index
-            Local_Latent = typeof(MTF[k]).parameters[2]
-            view(Result, :, (it+1):(it+Local_Latent), :) .= XTF.x[k].x[2].x[2]
-            it += Local_Latent
-        end
-    end
-    for k = 1:Skew_Dimension
-        Target = nullspace(transpose(view(Result, :, :, k)))
-        @show size(view(Result, :, :, k)), size(Previous[:, :, k]), size(Target)
-        F = svd(transpose(Previous[:, :, k]) * Target)
-        New_Projection = Target * transpose(F.U * F.Vt)
-        @show norm(New_Projection - view(Previous, :, :, k)),
-        norm(transpose(view(Result, :, :, k)) * view(Previous, :, :, k)),
-        norm(transpose(view(Result, :, :, k)) * New_Projection)
-        view(Previous, :, :, k) .= New_Projection
-    end
-    it = 0
-    for k = 1:length(MTF)
-        if k != Index
-            Local_Latent = typeof(MTF[k]).parameters[2]
-            XTF.x[k].x[2].x[2] .= view(Result, :, (it+1):(it+Local_Latent), :)
-            it += Local_Latent
-        end
-    end
-    return nothing
-end
-
-function Make_Orthogonal!(MTF::Multi_Foliation, XTF)
-    Found_Orthogonal = false
-    for Index = 1:length(MTF)
-        if Is_Orthogonal(MTF[Index][2])
-            if Found_Orthogonal
-                println("Make_Orthogonal: Too many orthogonal components")
-            end
-            Make_Orthogonal!(MTF, XTF, Index)
-            Found_Orthogonal = true
-        end
-    end
-    nothing
-end
+# function Make_Orthogonal!(
+#     MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
+#     XTF,
+#     Index,
+# ) where {M,State_Dimension,Skew_Dimension}
+#     Latent_Dimension = Get_Latent_Dimension(MTF[Index])
+#     Result = zeros(
+#         eltype(XTF),
+#         State_Dimension,
+#         State_Dimension - Latent_Dimension,
+#         Skew_Dimension,
+#     )
+#     Previous = XTF.x[Index].x[2].x[2]
+#     it::Int = 0
+#     for k = 1:length(MTF)
+#         if k != Index
+#             Local_Latent = Get_Latent_Dimension(MTF[k])
+#             Linear_Part = view(Result, :, (it+1):(it+Local_Latent), :)
+#             if Is_Mean_Stiefel(MTF[k][2])
+#                 @tullio Linear_Part[i, j, k] = XTF.x[k].x[2].x[2][j, i, k]
+#             else
+#                 Linear_Part .= XTF.x[k].x[2].x[2]
+#             end
+#             it += Local_Latent
+#         end
+#     end
+#     for k = 1:Skew_Dimension
+#         Target = nullspace(transpose(view(Result, :, :, k)))
+#         @show size(view(Result, :, :, k)), size(Previous[:, :, k]), size(Target)
+#         F = svd(transpose(Previous[:, :, k]) * Target)
+#         New_Projection = Target * transpose(F.U * F.Vt)
+#         @show norm(New_Projection - view(Previous, :, :, k)),
+#         norm(transpose(view(Result, :, :, k)) * view(Previous, :, :, k)),
+#         norm(transpose(view(Result, :, :, k)) * New_Projection)
+#         view(Previous, :, :, k) .= New_Projection
+#     end
+#     it = 0
+#     for k = 1:length(MTF)
+#         if k != Index
+#             Local_Latent = Get_Latent_Dimension(MTF[k])
+#             Linear_Part = view(Result, :, (it+1):(it+Local_Latent), :)
+#             if Is_Mean_Stiefel(MTF[k][2])
+#                 @tullio Linear_Part[i, j, k] = XTF.x[k].x[2].x[2][j, i, k]
+#             else
+#                 XTF.x[k].x[2].x[2] .= view(Result, :, (it+1):(it+Local_Latent), :)
+#             end
+#             it += Local_Latent
+#         end
+#     end
+#     return nothing
+# end
+#
+# function Make_Orthogonal!(MTF::Multi_Foliation, XTF)
+#     Found_Orthogonal = false
+#     for Index = 1:length(MTF)
+#         if Is_Orthogonal(MTF[Index][2])
+#             if Found_Orthogonal
+#                 println("Make_Orthogonal: Too many orthogonal components")
+#             end
+#             Make_Orthogonal!(MTF, XTF, Index)
+#             Found_Orthogonal = true
+#         end
+#     end
+#     nothing
+# end
 
 function Compute_Scaling!(
-    Scaling,
-    Torus,
-    Index_List,
-    Data,
-    Encoded_Phase,
-    Scaling_Parameter,
-    Scaling_Order,
-)
+        Scaling,
+        Torus,
+        Index_List,
+        Data,
+        Encoded_Phase,
+        Scaling_Parameter,
+        Scaling_Order,
+    )
     if Scaling_Order == No_Scaling
         Scaling .= 1
     elseif Scaling_Order == Linear_Scaling
@@ -286,7 +298,7 @@ function Compute_Scaling!(
             # this is scaling by 1/x
             Inv_Scale = (
                 Scaling_Parameter / 2 + Norm_Squared * Norm_Lin / (Scaling_Parameter^2) -
-                (1 / 2) * Norm_Squared * Norm_Squared / (Scaling_Parameter^3)
+                    (1 / 2) * Norm_Squared * Norm_Squared / (Scaling_Parameter^3)
             )
             Scaling[k] = 1 / ifelse(Norm_Lin < Scaling_Parameter, Inv_Scale, Norm_Lin)
         end
@@ -304,19 +316,19 @@ function Compute_Scaling!(
             # this is scaling by 1/x^2
             Inv_Scale = (
                 Scaling_Parameter^2 / 6 +
-                (4 / 3) * Norm_Squared * Norm_Lin / Scaling_Parameter -
-                (1 / 2) * Norm_Squared * Norm_Squared / (Scaling_Parameter^2)
+                    (4 / 3) * Norm_Squared * Norm_Lin / Scaling_Parameter -
+                    (1 / 2) * Norm_Squared * Norm_Squared / (Scaling_Parameter^2)
             )
             Scaling[k] = 1 / ifelse(Norm_Lin < Scaling_Parameter, Inv_Scale, Norm_Squared)
         end
     end
     if Scaling_Order != No_Scaling
-        for k = 1:(length(Index_List)-1)
-            NN = max(8, div(Index_List[k+1] - Index_List[k], 48))
-            for p = (1+Index_List[k]):Index_List[k+1]
+        for k in 1:(length(Index_List) - 1)
+            NN = max(8, div(Index_List[k + 1] - Index_List[k], 48))
+            for p in (1 + Index_List[k]):Index_List[k + 1]
                 avg = 0.0
-                To_Index = min(p + NN, Index_List[k+1])
-                for q = p:To_Index
+                To_Index = min(p + NN, Index_List[k + 1])
+                for q in p:To_Index
                     avg += Scaling[q]
                 end
                 Scaling[p] = avg / (1 + abs(To_Index - p))
@@ -327,26 +339,26 @@ function Compute_Scaling!(
     return nothing
 end
 
-struct Multi_Foliation_Cache{M,State_Dimension,Skew_Dimension}
+struct Multi_Foliation_Cache{M, State_Dimension, Skew_Dimension}
     Parts::Any
     Torus::Any
     Scaling::Any
 end
 
 function Make_Cache(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    Index_List,
-    Data,
-    Encoded_Phase;
-    Model = true,
-    Shift = false,
-    Big_Jac = true,
-    Scaling_Parameter = 2^(-2),
-    Iterations = 32,
-    Model_IC = false,
-    Time_Step = 1.0,
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        Index_List,
+        Data,
+        Encoded_Phase;
+        Model = true,
+        Shift = false,
+        IC_Only = true,
+        Scaling_Parameter = 2^(-2),
+        Iterations = 32,
+        Model_IC = false,
+        Time_Step = 1.0,
+    ) where {M, State_Dimension, Skew_Dimension}
     Scaling = zeros(eltype(Data), size(Data, 2))
     Torus = Find_Torus(MTF, XTF) # zeros(eltype(Data), State_Dimension, Skew_Dimension)
     Compute_Scaling!(
@@ -358,8 +370,8 @@ function Make_Cache(
         Scaling_Parameter,
         MTF.Scaling_Order,
     )
-    Parts = Array{Foliation_Cache,1}(undef, M)
-    Threads.@threads for Index = 1:M
+    Parts = Array{Foliation_Cache, 1}(undef, M)
+    Threads.@threads for Index in 1:M
         Parts[Index] = Make_Cache(
             MTF[Index],
             XTF.x[Index],
@@ -369,14 +381,14 @@ function Make_Cache(
             Scaling;
             Model = Model,
             Shift = Shift,
-            Big_Jac = Big_Jac,
+            IC_Only = IC_Only,
             Iterations = Iterations,
             Index = Index,
             Model_IC = Model_IC,
             Time_Step = Time_Step,
         )
     end
-    return Multi_Foliation_Cache{M,State_Dimension,Skew_Dimension}(Parts, Torus, Scaling)
+    return Multi_Foliation_Cache{M, State_Dimension, Skew_Dimension}(Parts, Torus, Scaling)
 end
 
 function Update_Scaling_All!(Cache, MTF, XTF, Index_List, Data, Encoded_Phase)
@@ -391,7 +403,7 @@ function Update_Scaling_All!(Cache, MTF, XTF, Index_List, Data, Encoded_Phase)
         MTF.Scaling_Parameter,
         MTF.Scaling_Order,
     )
-    Threads.@threads for Part_Index = 1:length(MTF)
+    Threads.@threads for Part_Index in 1:length(MTF)
         Update_Cache!(
             Cache.Parts[Part_Index],
             MTF[Part_Index],
@@ -427,10 +439,10 @@ function Update_Cache!(Cache, MTF, XTF, Index_List, Data, Encoded_Phase, Compone
 end
 
 function Find_Torus(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF;
-    Iterations = 32,
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF;
+        Iterations = 32,
+    ) where {M, State_Dimension, Skew_Dimension}
     # performing Newton iteration on the encoders
     # The Jacobian is approximated using the linear parts of the encoders, because the root should be very close to the origin
     Project_Dimension = maximum(maximum.(MTF.Indices))
@@ -444,8 +456,8 @@ function Find_Torus(
     Pseudo_RTol = min(MTF.Scaling_Parameter, 2^(-4)) # should be very well conditioned
     Pseudo_Indices = zeros(Int, Skew_Dimension)
     Condition_Number = one(eltype(QQ))
-    for it = 1:Iterations
-        for k = 1:M
+    for it in 1:Iterations
+        for k in 1:M
             @views Evaluate!(
                 Residual[MTF.Indices[k], :],
                 MTF[k][2],
@@ -501,32 +513,32 @@ end
 # # this find the tangent of the first model if it is two dimensional
 # NOTE : M_Model, X_Model are not needed, because they are part of MTF, XTF! ???
 function Find_Tangent(
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension},
-    XTF,
-    M_Model,
-    X_Model,
-    Index,
-    Torus,
-    Beta_Grid;
-    Select = [1; 2],
-) where {M,State_Dimension,Skew_Dimension}
+        MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension},
+        XTF,
+        M_Model,
+        X_Model,
+        Index,
+        Torus,
+        Beta_Grid;
+        Select = [1; 2],
+    ) where {M, State_Dimension, Skew_Dimension}
     # Latent_Tangent indices : 1 - dim, 2 - theta, 3 - beta
     #     Latent_Tangent, DR0, T0 = Find_Tangent(MTF[1][1], XTF.x[1].x[1], SH, Beta_Grid)
     #     _, Jac = Find_Torus(M_Model, X_Model, SH)
     Jac = view(X_Model.WW, :, :, M_Model.Linear_Indices)
     Local_Latent = size(Jac, 1)
     #     @assert Local_Latent == 2 "Not a two-dimensional system"
-    @show size(Jac)
+    #     @show size(Jac)
     # finding the tangent bundle of the R. O. Model
     Latent_Tangent, DR0, T0 = Find_Tangent(M_Model, Jac, Select, Beta_Grid)
-    @show size(Latent_Tangent)
+    #     @show size(Latent_Tangent)
     Latent_Extended =
         zeros(eltype(Latent_Tangent), State_Dimension, Skew_Dimension, length(Beta_Grid))
-    @show size(Latent_Extended)
+    #     @show size(Latent_Extended)
     Latent_Extended[MTF.Indices[Index], :, :] .= Latent_Tangent
     Encoded_Phase = diagm(ones(Skew_Dimension))
     Jac_Full = zeros(eltype(Torus), State_Dimension, State_Dimension, Skew_Dimension)
-    for k = 1:M
+    for k in 1:M
         Jacobian!(
             view(Jac_Full, MTF.Indices[k], :, :),
             MTF[k][2],
@@ -535,8 +547,8 @@ function Find_Tangent(
             Encoded_Phase,
         )
     end
-    display(Encoded_Phase)
-    display(Jac_Full[:, :, 1])
+    #     display(Encoded_Phase)
+    #     display(Jac_Full[:, :, 1])
     Full_Tangent = zero(Latent_Extended)
     #     # the Jacobian
     #     @show size(Jac_Full[1:Local_Latent, :, :])
@@ -553,7 +565,7 @@ function Find_Tangent(
     for k in axes(Latent_Tangent, 2)
         IJAC = pinv(Jac_Full[:, :, k])
         ev = abs.(eigvals(Jac_Full[:, :, k]))
-        @show k, minimum(ev), maximum(ev)
+        #         @show k, minimum(ev), maximum(ev)
         for l in axes(Latent_Tangent, 3)
             Full_Tangent[:, k, l] .= IJAC * Latent_Extended[:, k, l]
         end

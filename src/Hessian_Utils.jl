@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 function riemannian_Hessian!(M::Euclidean, Y, p, G, H, X)
     copyto!(Y, H)
     return Y

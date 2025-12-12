@@ -1,17 +1,4 @@
-# 1. Evaluate the equations on the grid
-# 1.a Create the grid
-# 1.b Evaluate T() and R() on the grid
-# 1.c Evaluate W() on the (transformed) grid
-# 1.d Evaluate D_1 W() and D_2 W() on the grid
-# 2. W has a W_0 component for the constant part and W_n component
-
-# -> W on the grid
-# -> W on the shifted grid (R(r), beta+T(r),t+omega)
-# -> W_par on W on grid
-# -> W_
-# -> F() on the grid QPModel
-
-# In the Skew_Dimenesion, we need the shift operator, as opposed to an Omega
+# SPDX-License-Identifier: EUPL-1.2
 
 struct Polar_Manifold{
     State_Dimension,
@@ -417,7 +404,7 @@ function Evaluate!(
         V2_E_WW = reshape(V2_E_WW_RS, :, size(E_WW)[2:end]...)
         F_WW = reshape(F_WW_RS, :, size(E_WW)[2:end]...)
         # shift
-        @show size(SH), size(V1_E_WW_RT)
+        # @show size(SH), size(V1_E_WW_RT)
         @tullio V1_E_WW_RT_SH[i, j, k, l] := V1_E_WW_RT[i, j, p, l] * SH[p, k]
         # PC
         @tullio D0WW[i, r, k, l] := WWP[i, j, k, l] * MON_LIN[r, j]
@@ -488,7 +475,7 @@ function Evaluate!(
                 min_rat = minimum(vals) / maximum(vals)
             end
         end
-        @show min_rat
+        # @show min_rat
         # Indices
         WW_C = range(1, length(XX_Part.WW))
         RR_C = range(1 + last(WW_C), last(WW_C) + length(XX_Part.RR))
@@ -642,7 +629,7 @@ function Polar_Manifold(
     else
         M_Model, X_Model = MTF[Index][1], XTF.x[Index].x[1]
     end
-    @show X_Model
+    # @show X_Model
     # same SH in all models
     #     SH = M_Model.SH
     Torus = Find_Torus(MTF, XTF)
@@ -661,9 +648,9 @@ function Polar_Manifold(
         Select = Select,
     )
     @tullio FT[i, k, l] := Transformation[i, k, p] * FT_tmp[p, k, l]
-    @show Torus
-    @show FT_tmp
-    @show FT
+    # @show Torus
+    # @show FT_tmp
+    # @show FT
     for k in axes(WW, 4), l in axes(WW, 2)
         #         @show size(WW[:, 1, :, k]), size(Torus)
         WW[:, l, :, k] .= Torus
@@ -804,8 +791,8 @@ function Find_MAP_Manifold(
     Radial_Intervals,
     Radius,
     Phase_Dimension,
-    abstol = 1e-9,
-    reltol = 1e-9,
+    abstol = 1.0e-9,
+    reltol = 1.0e-9,
     maxiters = 12,
     initial_maxiters = 200,
 ) where {State_Dimension,Skew_Dimension,Start_Order,End_Order,Trajectories}
@@ -875,8 +862,8 @@ function Find_DATA_Manifold(
     Radius,
     Phase_Dimension,
     Transformation,
-    abstol = 1e-9,
-    reltol = 1e-9,
+    abstol = 1.0e-9,
+    reltol = 1.0e-9,
     maxiters = 12,
     initial_maxiters = 200,
 ) where {M,State_Dimension,Skew_Dimension}
@@ -979,134 +966,11 @@ function Curves(
     return RR, TT, AA
 end
 
-# function Polar_Grid_To_Latent(MTF::Multi_Foliation, XTF, Index::Integer,
-#                               PM::Polar_Manifold{State_Dimension, Latent_Dimension, Radial_Order, Radial_Dimension, Phase_Dimension, Skew_Dimension}, XX
-#                              ) where {State_Dimension, Latent_Dimension, Radial_Order, Radial_Dimension, Phase_Dimension, Skew_Dimension}
-#     WW = zeros(eltype(XX), State_Dimension, Radial_Dimension, Skew_Dimension, Phase_Dimension)
-#     WW .= XX.WW
-#     Radial_Mesh = PM.Radial_Mesh
-#     Beta_Grid = Fourier_Grid(Phase_Dimension)
-#     MON_LIN, D_MON_LIN = Clenshaw_Interpolate(Radial_Mesh, Radial_Order, Radial_Mesh)
-#     #
-#     @tullio E_WW[s, r, p, q] := WW[s, j, p, q] * MON_LIN[r, j]
-#     E_WW_RS = reshape(E_WW, size(E_WW, 1), :)
-#     #
-#     E_Phase = zeros(Skew_Dimension, size(E_WW)[2:end]...)
-#     for s in axes(E_Phase, 1), r in axes(E_Phase, 2), p in axes(E_Phase, 3), q in axes(E_Phase, 4)
-#         E_Phase[s, r, p, q] = I[s, p]
-#     end
-#     E_Phase_RS = reshape(E_Phase, size(E_Phase, 1), :)
-#     #
-#     E_Input = zeros(2, size(E_WW)[2:end]...)
-#     E_Input[1, :, :, :] .= reshape(Radial_Mesh, :, 1, 1)
-#     E_Input[2, :, :, :] .= reshape(Beta_Grid, 1, 1, :)
-#     #
-#     V1_E_WW_RS = zeros(eltype(WW), Latent_Dimension, size(E_WW_RS, 2))
-#     Evaluate_Encoder_First!(V1_E_WW_RS, MTF, XTF, Index, E_WW_RS, E_Phase_RS)
-#     E_Output = reshape(V1_E_WW_RS, Latent_Dimension, size(E_WW)[2:end]...)
-#     return E_Output, E_Input
-# end
-
-# using Natural Neighnours
-# function Inverse_Interpolate(Output, Input)
-#     Itp = []
-#     for k in axes(Output, 3)
-#         xx = vec(Input[1, :, k, :]) .* cos.(vec(Input[2, :, k, :]))
-#         yy = vec(Input[1, :, k, :]) .* sin.(vec(Input[2, :, k, :]))
-#         itp_X = NaturalNeighbours.interpolate(vec(Output[1, :, k, :]), vec(Output[2, :, k, :]), xx)
-#         itp_Y = NaturalNeighbours.interpolate(itp_X.triangulation, yy)
-#         push!(Itp, (itp_X, itp_Y))
-#     end
-#     return Itp
-# end
-
-# function Manifold_Coordinates(Interpolation, Latent_Data, Encoded_Phase)
-#     Result = [similar(Latent_Data) for k in 1:length(Interpolation)]
-#     for k in eachindex(Interpolation)
-#         Result[k][1, :] .= Interpolation[k][1](Latent_Data[1, :], Latent_Data[2, :])
-#         Result[k][2, :] .= Interpolation[k][2](Latent_Data[1, :], Latent_Data[2, :])
-#     end
-#     for k in eachindex(Result)
-#         Result[k] .*= reshape(Encoded_Phase[k, :], 1, :)
-#     end
-#     # checking validity
-#     Valid = [zeros(Bool, size(Latent_Data, 2)) for k in 1:length(Interpolation)]
-#     for k in eachindex(Interpolation)
-#         tri = Interpolation[k][1].triangulation
-#         for j in axes(Latent_Data, 2)
-#             inside = DelaunayTriangulation.find_polygon(tri, (Latent_Data[1, j], Latent_Data[2, j]))
-#             Valid[k][j] = inside != 0
-#         end
-#     end
-#     Latent_Normal = sum(Result)
-#     Valid_Normal = reduce(.&, Valid)
-#     return Latent_Normal, Valid_Normal
-# end
-
-# function Embed_Manifold(PM::Polar_Manifold{State_Dimension, Latent_Dimension, Radial_Order, Radial_Dimension, Phase_Dimension, Skew_Dimension}, PX,
-#                         Latent_Normal, Encoded_Phase; Transformation=PM.Transformation
-#                        ) where {State_Dimension, Latent_Dimension, Radial_Order, Radial_Dimension, Phase_Dimension, Skew_Dimension}
-#     WW = PX.WW
-#     TT = PX.TT
-#     Radial_Mesh = PM.Radial_Mesh
-#     Beta_Grid = Fourier_Grid(Phase_Dimension)
-#     RR = sqrt.(Latent_Normal[1, :] .^ 2 + Latent_Normal[2, :] .^ 2)
-#     BB = angle.(Latent_Normal[1, :] .+ 1im * Latent_Normal[2, :])
-#     ITP = Barycentric_Interpolation_Matrix(Radial_Order, Radial_Mesh, RR)
-# #     ITP, _ = Clenshaw_Interpolate(RR, Radial_Order, Radial_Mesh)
-#     @tullio SH_beta[q, k] := psi(BB[k] - Beta_Grid[q], Phase_Dimension)
-#     @tullio WW_TR[i2, j, q, l] := Transformation[i2, q, i] * WW[i, j, q, l]
-#     @show size(ITP), size(SH_beta), size(Encoded_Phase)
-#     @tullio E_WW[i, k] := ITP[k, r] * WW_TR[i, r, j, q] * SH_beta[q, k] * Encoded_Phase[j, k]
-#     @tullio E_TT[k] := ITP[k, r] * TT[r]
-#     return E_WW, E_TT
-# end
-
 function To_Latent(MTF::Multi_Foliation, XTF, Index, Data, Encoded_Phase)
     Latent_Data = zeros(eltype(Data), size(XTF.x[Index].x[1].WW, 1), size(Data, 2))
     Evaluate!(Latent_Data, MTF[Index][2], XTF.x[Index].x[2], Data, Encoded_Phase)
     return Latent_Data
 end
-
-# function Latent_To_Manifold(PM::Polar_Manifold, PX,
-#                           MTF::Multi_Foliation, XTF, Index, Latent_Data, Encoded_Phase;
-#                           Transformation=PM.Transformation)
-#     Output, Input = Polar_Grid_To_Latent(MTF, XTF, Index, PM, PX)
-#     Interpolation = Inverse_Interpolate(Output, Input)
-#     Latent_Normal, Valid_Normal = Manifold_Coordinates(Interpolation, Latent_Data, Encoded_Phase)
-#     E_WW, E_TT = Embed_Manifold(PM, PX, Latent_Normal, Encoded_Phase; Transformation=Transformation)
-#     return E_WW, E_TT, Valid_Normal
-# end
-
-# Phase_Dimension : how many points to consider within a period of vibration
-# function Trajecory_To_Amplitude(E_WW, E_TT, Valid_Normal, Index_List, Phase_Dimension::Integer)
-#     E_FF = 2 * pi ./ E_TT
-#     E_FF[findall(.! Valid_Normal)] .= 0
-#     AMP = zero(E_TT)
-#     for k in 2:length(Index_List)
-#         start = 1+Index_List[k-1]
-#         fin = Index_List[k]
-#         shift = ceil(Int, min(maximum(E_FF[start:fin]), fin))
-#         for j in start:(fin - shift)
-#             if Valid_Normal[j] && (E_TT[j] > 0)
-#                 res = zero(eltype(E_WW))
-#                 if size(E_WW, 1) == 1
-#                     itp = Interpolations.interpolate((0:shift,), E_WW[1,j:j+shift], Interpolations.Gridded(Interpolations.Linear()))
-#                     for q in range(0, E_FF[j], length=Phase_Dimension+1)[1:end-1]
-#                         res += itp(q) ^ 2
-#                     end
-#                 else
-#                     itp = Interpolations.interpolate((axes(E_WW, 1), 0:shift,), E_WW[:,j:j+shift], (Interpolations.NoInterp(), Interpolations.Gridded(Interpolations.Linear())))
-#                     for p in axes(E_WW, 1), q in range(0, E_FF[j], length=Phase_Dimension+1)[1:end-1]
-#                         res += itp(p, q) ^ 2
-#                     end
-#                 end
-#                 AMP[j] = sqrt(2 * res / Phase_Dimension)
-#             end
-#         end
-#     end
-#     return AMP
-# end
 
 function Error_Statistics(
     On_Manifold_Amplitude_In,
@@ -1125,7 +989,7 @@ function Error_Statistics(
     maxT = max(maximum(Training_Errors), eps(1.0))
     minT = ifelse(isnan(minT), eps(1.0), minT)
     maxT = ifelse(isnan(maxT), eps(1.0), maxT)
-    @show minT, maxT
+    # @show minT, maxT
     edU = (
         exp.(range(log(minT), log(maxT), length = bins[1])),
         range(minU, maxU, length = bins[2]),
@@ -1156,12 +1020,335 @@ function Error_Statistics(
     return errMaxX, errMaxY, errMinX, errMinY, errMeanX, errMeanY, errStdX
 end
 
+function Data_Density(data, Points_Per_Bin = 64)
+    # remove zero data points. That can occur, because of incomplete manifold embedding
+    # the data is sorted by magnitude
+    data_nz = sort(data[findall(!iszero, data)])
+    # make sure that each bin has the same lenght
+    cut = Points_Per_Bin * div(length(data_nz), Points_Per_Bin)
+    # create a matrix where each column is a bin
+    data_nz_R = reshape(data_nz[1:cut], Points_Per_Bin, :)
+    data_min = vec(minimum(data_nz_R, dims = 1))
+    data_max = vec(maximum(data_nz_R, dims = 1))
+    data_max[end] = maximum(data_nz)
+    data_separation = (data_max[1:(end-1)] + data_min[2:end]) / 2
+    data_max[1:(end-1)] .= data_separation
+    data_min[2:end] .= data_separation
+    data_mean = vec(mean(data_nz_R, dims = 1))
+    data_tail = data_nz[(1+cut-Points_Per_Bin):end]
+    data_mean[end] = mean(data_tail)
+    data_points = Points_Per_Bin * ones(length(data_mean))
+    data_points[end] = length(data_tail)
+    #
+    pos = data_mean
+    den =
+        data_points ./
+        ((data_max .- data_min) .* (sum(data_points) * (data_max[end] - data_min[1])))
+    return pos, den
+end
+
 """
-    Create_Plot()
+    Data_Error(
+    PM::Polar_Manifold{
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    },
+    PX,
+    MIP,
+    XIP,
+    MTF::Multi_Foliation,
+    XTF,
+    Index,
+    Index_List,
+    Data,
+    Encoded_Phase;
+    Transformation,
+    Model_IC = false,
+    Iterations = 32,
+) where {
+    State_Dimension,
+    Latent_Dimension,
+    Radial_Order,
+    Radial_Dimension,
+    Phase_Dimension,
+    Skew_Dimension,
+}
+    )
+
+Plots the training and testing errors as a function of vibration amplitude.
+* `PM`, `PX` the invariant manifold calculated by [`Find_DATA_Manifold`](@ref)
+* `MIP`, `XIP` the manifold embedding calculated by [`Extract_Manifold_Embedding`](@ref)
+* `MTF`, `XTF` the set of invariant foliations
+* `Index` which invariant foliation is it calculated for
+* `Index_List`, `Data`, `Encoded_Phase` the training data
+* `Transformation` the transformation the brings back the data to the physical coordinate
+* `Color` line colour of the plot
+* `Model_IC` whether to re-calculate the initial conditions of trajectories stored in `XTF`
+"""
+function Data_Error(
+    PM::Polar_Manifold{
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    },
+    PX,
+    MIP,
+    XIP,
+    MTF::Multi_Foliation,
+    XTF,
+    Index,
+    Index_List,
+    Data,
+    Encoded_Phase;
+    Transformation,
+    Model_IC = false,
+    Iterations = 32,
+) where {
+    State_Dimension,
+    Latent_Dimension,
+    Radial_Order,
+    Radial_Dimension,
+    Phase_Dimension,
+    Skew_Dimension,
+}
+    if Model_IC
+        IC = XTF.x[Index].x[1].IC
+        IC .*= (1 .+ 0.2 * norm(IC) * (rand(size(IC)...) .- 0.5))
+    end
+    MTF_Cache = Make_Cache(
+        MTF,
+        XTF,
+        Index_List,
+        Data,
+        Encoded_Phase,
+        Model = false,
+        IC_Only = true,
+        Model_IC = Model_IC,
+        Iterations = Iterations,
+    )
+    Training_Errors = zeros(eltype(Data), size(Data, 2))
+    Pointwise_Error!(
+        Training_Errors,
+        MTF[Index],
+        XTF.x[Index],
+        Index_List,
+        Data,
+        Encoded_Phase,
+        MTF_Cache.Scaling,
+        Cache = MTF_Cache.Parts[Index],
+    )
+    #
+    Latent_Data = To_Latent(MTF, XTF, Index, Data, Encoded_Phase)
+    E_WW, E_WW_I, On_Manifold_Amplitude, Valid_Ind = Embed_Manifold(
+        MIP,
+        XIP,
+        Latent_Data,
+        Encoded_Phase;
+        Output_Inverse_Transformation = Transformation,
+    )
+    Valid_Id = findall(Valid_Ind)
+    Density_Amplitude, Density_Value = Data_Density(On_Manifold_Amplitude[Valid_Id])
+
+    Data_Max = maximum(Density_Amplitude)
+    Error_Max,
+    Error_Max_Amplitude,
+    errMinX,
+    errMinY,
+    Error_Mean,
+    Error_Mean_Amplitude,
+    errStdX = Error_Statistics(
+        On_Manifold_Amplitude[Valid_Id],
+        Training_Errors[Valid_Id],
+        Data_Max,
+    )
+    Error_Curves = (
+        Density_Value = Density_Value,
+        Density_Amplitude = Density_Amplitude,
+        Error_Mean_Amplitude = Error_Mean_Amplitude,
+        Error_Mean = Error_Mean,
+        Error_Max_Amplitude = Error_Max_Amplitude,
+        Error_Max = Error_Max,
+    )
+    return MTF_Cache, Data_Max, Error_Curves
+end
+
+"""
+    Data_Result(
+    PM::Polar_Manifold{
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    },
+    PX,
+    MIP,
+    XIP,
+    MTF::Multi_Foliation,
+    XTF,
+    Index,
+    Index_List,
+    Data,
+    Encoded_Phase;
+    Time_Step = 1.0,
+    Transformation = PM.Transformation,
+    Slice_Transformation = Transformation,
+    Hz = false,
+    Damping_By_Derivative::Bool = true,
+    Model_IC = false,
+) where {
+    State_Dimension,
+    Latent_Dimension,
+    Radial_Order,
+    Radial_Dimension,
+    Phase_Dimension,
+    Skew_Dimension,
+}
+
+Plots the instantaneous frequency and damping curves for the invariant foliation at `Index`.
+* `PM`, `PX` the invariant manifold calculated by [`Find_DATA_Manifold`](@ref)
+* `MIP`, `XIP` the manifold embedding calculated by [`Extract_Manifold_Embedding`](@ref)
+* `MTF`, `XTF` the set of invariant foliations
+* `Index` which invariant foliation is it calculated for
+* `Index_List`, `Data`, `Encoded_Phase` the training data
+* `Time_Step` sampling time-step of data for calulating frequencies
+* `Transformation` the transformation the brings back the data to the physical coordinate
+* `Slice_Transformation` the transformation, in case `PM`, `PX` are calculated from a fixed parameters slice of the identified foliation.
+    If not a slice, should be the same as `Transformation`.
+* `Hz` if `true` frequency is displayed in Hz, otherwise it is rad/s.
+* `Damping_By_Derivative` if `true` a truely instantaneous damping ratio is displayed.
+    If `false` the damping ratio commonly (and mistakenly) used in the literature is displayed
+* `Model_IC` whether to re-calculate the initial conditions of trajectories stored in `XTF`
+"""
+function Data_Result(
+    PM::Polar_Manifold{
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    },
+    PX,
+    MIP,
+    XIP,
+    MTF::Multi_Foliation,
+    XTF,
+    Index,
+    Index_List,
+    Data,
+    Encoded_Phase;
+    Time_Step = 1.0,
+    Transformation = PM.Transformation,
+    Slice_Transformation = Transformation,
+    Hz = false,
+    Damping_By_Derivative::Bool = true,
+    Model_IC = false,
+) where {
+    State_Dimension,
+    Latent_Dimension,
+    Radial_Order,
+    Radial_Dimension,
+    Phase_Dimension,
+    Skew_Dimension,
+}
+    RR, TT, AA = Curves(
+        PM,
+        PX,
+        Transformation = Slice_Transformation,
+        Damping_By_Derivative = Damping_By_Derivative,
+    )
+    if Hz
+        Frequency = TT ./ (2 * pi * Time_Step)
+    else
+        Frequency = TT ./ Time_Step
+    end
+
+    Damping_Ratio = -log.(abs.(RR)) ./ TT
+
+    MTF_Cache, Data_Max, Error_Curves = Data_Error(
+        PM,
+        PX,
+        MIP,
+        XIP,
+        MTF,
+        XTF,
+        Index,
+        Index_List,
+        Data,
+        Encoded_Phase;
+        Transformation = Transformation,
+        Model_IC = Model_IC,
+    )
+    Backbone_Curves =
+        (Amplitude = AA, Frequency = Frequency, Damping_Ratio = Damping_Ratio, Hz = Hz)
+    return MTF_Cache, Backbone_Curves, Error_Curves, Data_Max
+end
+
+"""
+    Model_Result(
+        PM::Polar_Manifold,
+        PX;
+        Time_Step = 1.0,
+        Hz = false,
+        Damping_By_Derivative::Bool = true,
+    )
+
+Calculates the instantaneous frequency and damping ratio for the invariant manifold directly calculated from an ODE or map model.
+* `PM`, `PX` the invariant manifold calculated by [`Find_ODE_Manifold`](@ref) or [`Find_MAP_Manifold`](@ref)
+* `Time_Step` sampling time-step of data for calulating frequencies
+* `Hz` if `true` frequency is displayed in Hz, otherwise it is rad/s.
+* `Damping_By_Derivative` if `true` a truely instantaneous damping ratio is displayed.
+    If `false` the damping ratio commonly (and mistakenly) used in the literature is displayed
+"""
+function Model_Result(
+    PM::Polar_Manifold{
+        State_Dimension,
+        Latent_Dimension,
+        Radial_Order,
+        Radial_Dimension,
+        Phase_Dimension,
+        Skew_Dimension,
+    },
+    PX;
+    Time_Step = 1.0,
+    Hz = false,
+    Damping_By_Derivative::Bool = true,
+) where {
+    State_Dimension,
+    Latent_Dimension,
+    Radial_Order,
+    Radial_Dimension,
+    Phase_Dimension,
+    Skew_Dimension,
+}
+    RR, TT, AA = Curves(PM, PX; Damping_By_Derivative = Damping_By_Derivative)
+    if Hz
+        Frequency = TT ./ (2 * pi * Time_Step)
+    else
+        Frequency = TT ./ Time_Step
+    end
+    Damping_Ratio = -log.(abs.(RR)) ./ TT
+    Backbone_Curves =
+        (Amplitude = AA, Frequency = Frequency, Damping_Ratio = Damping_Ratio, Hz = Hz)
+    return Backbone_Curves
+end
+
+"""
+    Create_Plot(; Amplitude = "Amplitude")
 
 Creates a figure to display the results.
+* Amplitude is a string that will be put on the vertical axes of the plot
 """
-function Create_Plot()
+function Create_Plot(; Amplitude = "Amplitude")
     fig = Figure(size = (1250, 250), fontsize = 16)
     axDense = Makie.Axis(
         fig[1, 1],
@@ -1181,15 +1368,15 @@ function Create_Plot()
     axFreq = Makie.Axis(fig[1, 4], xticks = WilkinsonTicks(3, k_min = 3, k_max = 4))
     axDamp = Makie.Axis(fig[1, 5], xticks = WilkinsonTicks(3, k_min = 3, k_max = 4))
     axDense.xlabel = "Data Density"
-    axDense.ylabel = "Amplitude"
+    axDense.ylabel = Amplitude
     axErr.xlabel = L"E_{\mathit{rel}}"
-    axErr.ylabel = "Amplitude"
+    axErr.ylabel = Amplitude
     axTrace.xlabel = "Iteration"
     axTrace.ylabel = "Error"
     axFreq.xlabel = "Frequency"
-    axFreq.ylabel = "Amplitude"
+    axFreq.ylabel = Amplitude
     axDamp.xlabel = "Damping ratio"
-    axDamp.ylabel = "Amplitude"
+    axDamp.ylabel = Amplitude
     return fig
 end
 
@@ -1244,364 +1431,204 @@ function Plot_Error_Trace(
     Test_Color = Makie.wong_colors()[2],
 )
     axTrace = content(fig[1, 3])
+    f_limits = axTrace.limits.val
+    if !isnothing(f_limits[1])
+        x_low, x_high = f_limits[1]
+    else
+        x_low = typemax(Float32)
+        x_high = typemin(Float32)
+    end
+    if !isnothing(f_limits[2])
+        y_low, y_high = f_limits[2]
+    else
+        y_low = typemax(Float32)
+        y_high = typemin(Float32)
+    end
+
     Id = findlast(Train_Trace[1, Index, :] .!= 0)
     lines!(axTrace, 2:Id, Train_Trace[1, Index, 2:Id], color = Train_Color)
     ymax = maximum(Train_Trace[1, Index, 2:Id])
     ymin = minimum(Train_Trace[1, Index, 2:Id])
     if !isnothing(Test_Trace)
         Id_Test = findall(Test_Trace[1, Index, :] .!= 0)
-        scatter!(
+        lines!(
             axTrace,
             Id_Test[2:end],
             Test_Trace[1, Index, Id_Test[2:end]],
             color = Test_Color,
+            linestyle = :dash,
         )
-        ymax = max(maximum(x->isnan(x) ? -Inf : x, Test_Trace[1, Index, Id_Test[2:end]]), ymax)
-        ymin = min(minimum(x->isnan(x) ? Inf : x, Test_Trace[1, Index, Id_Test[2:end]]), ymin)
-        ylims!(axTrace, 0.9 * ymin, 1.1 * ymax)
-        xlims!(axTrace, 1, Id + 1)
+        ymax = max(
+            maximum(x -> isnan(x) ? -Inf : x, Test_Trace[1, Index, Id_Test[2:end]]),
+            ymax,
+        )
+        ymin = min(
+            minimum(x -> isnan(x) ? Inf : x, Test_Trace[1, Index, Id_Test[2:end]]),
+            ymin,
+        )
+        ylims!(axTrace, min(0.9 * ymin, y_low), max(1.1 * ymax, y_high))
+        xlims!(axTrace, min(1, x_low), max(Id + 1, x_high))
     else
-        ylims!(axTrace, 0.9 * ymin, 1.1 * ymax)
-        xlims!(axTrace, 1, Id + 1)
+        ylims!(axTrace, min(0.9 * ymin, y_low), max(1.1 * ymax, y_high))
+        xlims!(axTrace, min(1, x_low), max(Id + 1, x_high))
     end
-    nothing
+    return nothing
 end
 
-function Data_Density(data, Points_Per_Bin = 64)
-    # remove zero data points. That can occur, because of incomplete manifold embedding
-    # the data is sorted by magnitude
-    data_nz = sort(data[findall(!iszero, data)])
-    # make sure that each bin has the same lenght
-    cut = Points_Per_Bin * div(length(data_nz), Points_Per_Bin)
-    # create a matrix where each column is a bin
-    data_nz_R = reshape(data_nz[1:cut], Points_Per_Bin, :)
-    data_min = vec(minimum(data_nz_R, dims = 1))
-    data_max = vec(maximum(data_nz_R, dims = 1))
-    data_max[end] = maximum(data_nz)
-    data_separation = (data_max[1:end-1] + data_min[2:end]) / 2
-    data_max[1:end-1] .= data_separation
-    data_min[2:end] .= data_separation
-    data_mean = vec(mean(data_nz_R, dims = 1))
-    data_tail = data_nz[(1+cut-Points_Per_Bin):end]
-    data_mean[end] = mean(data_tail)
-    data_points = Points_Per_Bin * ones(length(data_mean))
-    data_points[end] = length(data_tail)
-    #
-    pos = data_mean
-    den =
-        data_points ./
-        ((data_max .- data_min) .* (sum(data_points) * (data_max[end] - data_min[1])))
-    return pos, den
-end
-
-"""
-    Plot_Data_Error!(
-        fig,
-        PM,
-        PX,
-        MIP,
-        XIP,
-        MTF::Multi_Foliation,
-        XTF,
-        Index,
-        Index_List,
-        Data,
-        Encoded_Phase;
-        Transformation,
-        Color = Makie.wong_colors()[1],
-        Model_IC = false,
-    )
-
-Plots the training and testing errors as a function of vibration amplitude.
-* `fig` the figure to plot to
-* `PM`, `PX` the invariant manifold calculated by [`Find_DATA_Manifold`](@ref)
-* `MIP`, `XIP` the manifold embedding calculated by [`Extract_Manifold_Embedding`](@ref)
-* `MTF`, `XTF` the set of invariant foliations
-* `Index` which invariant foliation is it calculated for
-* `Index_List`, `Data`, `Encoded_Phase` the training data
-* `Transformation` the transformation the brings back the data to the physical coordinate
-* `Color` line colour of the plot
-* `Model_IC` whether to re-calculate the initial conditions of trajectories stored in `XTF`
-"""
-function Plot_Data_Error!(
+function Plot_Backbone_Curves!(
     fig,
-    PM::Polar_Manifold{
-        State_Dimension,
-        Latent_Dimension,
-        Radial_Order,
-        Radial_Dimension,
-        Phase_Dimension,
-        Skew_Dimension,
-    },
-    PX,
-    MIP,
-    XIP,
-    MTF::Multi_Foliation,
-    XTF,
-    Index,
-    Index_List,
-    Data,
-    Encoded_Phase;
-    Transformation,
-    Color = Makie.wong_colors()[1],
-    Model_IC = false,
-    Iterations = 32,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
-    axDense = content(fig[1, 1])
-    axErr = content(fig[1, 2])
-    MTF_Cache = Make_Cache(
-        MTF,
-        XTF,
-        Index_List,
-        Data,
-        Encoded_Phase,
-        Model = false,
-        Big_Jac = false,
-        Model_IC = Model_IC,
-        Iterations = Iterations,
-    )
-    Training_Errors = zeros(eltype(Data), size(Data, 2))
-    Pointwise_Error!(
-        Training_Errors,
-        MTF[Index],
-        XTF.x[Index],
-        Index_List,
-        Data,
-        Encoded_Phase,
-        MTF_Cache.Scaling,
-        Cache = MTF_Cache.Parts[Index],
-    )
-    #
-    Latent_Data = To_Latent(MTF, XTF, Index, Data, Encoded_Phase)
-    #     E_WW, E_TT, Valid_Normal = Latent_To_Manifold(PM, PX, MTF, XTF, Index, Latent_Data, Encoded_Phase; Transformation=Transformation)
-    #     Valid_Id = findall(Valid_Normal)
-    #     On_Manifold_Amplitude = Trajecory_To_Amplitude(E_WW, E_TT, Valid_Normal, Index_List, Phase_Dimension)
-    E_WW, E_WW_I, On_Manifold_Amplitude, Valid_Ind = Embed_Manifold(
-        MIP,
-        XIP,
-        Latent_Data,
-        Encoded_Phase;
-        Output_Inverse_Transformation = Transformation,
-    )
-    Valid_Id = findall(Valid_Ind)
-    #
-    pos, den = Data_Density(On_Manifold_Amplitude[Valid_Id])
-    lines!(axDense, den, pos, color = Color, linewidth = 3)
-
-    Data_Max = maximum(pos)
-    errMaxX, errMaxY, errMinX, errMinY, errMeanX, errMeanY, errStdX = Error_Statistics(
-        On_Manifold_Amplitude[Valid_Id],
-        Training_Errors[Valid_Id],
-        Data_Max,
-    )
-    lines!(axErr, errMaxX, errMaxY, color = Color, linestyle = :dot)
-    lines!(axErr, errMeanX, errMeanY, color = Color, linestyle = :solid, linewidth = 3)
-    return MTF_Cache, Data_Max
-end
-
-# TODO add input: On_Manifold_Data, Valid_Id
-"""
-    Plot_Data_Result!(
-        fig,
-        PM::Polar_Manifold,
-        PX,
-        MIP,
-        XIP,
-        MTF::Multi_Foliation,
-        XTF,
-        Index,
-        Index_List,
-        Data,
-        Encoded_Phase;
-        Data_Max = 1.0,
-        Time_Step = 1.0,
-        Transformation = PM.Transformation,
-        Slice_Transformation = Transformation,
-        Label = "Data",
-        Color = Makie.wong_colors()[1],
-        Hz = false,
-        Damping_By_Derivative::Bool = true,
-        Model_IC = false,
-    )
-
-Plots the instantaneous frequency and damping curves for the invariant foliation at `Index`.
-* `fig` the figure to plot to
-* `PM`, `PX` the invariant manifold calculated by [`Find_DATA_Manifold`](@ref)
-* `MIP`, `XIP` the manifold embedding calculated by [`Extract_Manifold_Embedding`](@ref)
-* `MTF`, `XTF` the set of invariant foliations
-* `Index` which invariant foliation is it calculated for
-* `Index_List`, `Data`, `Encoded_Phase` the training data
-* `Data_Max` relative maximum amplitude of data to consider. `=1.0` means all data included.
-* `Time_Step` sampling time-step of data for calulating frequencies
-* `Transformation` the transformation the brings back the data to the physical coordinate
-* `Slice_Transformation` the transformation, in case `PM`, `PX` are calculated from a fixed parameters slice of the identified foliation.
-    If not a slice, should be the same as `Transformation`.
-* `Label` the legend of the plotted lines
-* `Color` line colour of the plot
-* `Hz` if `true` frequency is displayed in Hz, otherwise it is rad/s.
-* `Damping_By_Derivative` if `true` a truely instantaneous damping ratio is displayed.
-    If `false` the damping ratio commonly (and mistakenly) used in the literature is displayed
-* `Model_IC` whether to re-calculate the initial conditions of trajectories stored in `XTF`
-"""
-function Plot_Data_Result!(
-    fig,
-    PM::Polar_Manifold{
-        State_Dimension,
-        Latent_Dimension,
-        Radial_Order,
-        Radial_Dimension,
-        Phase_Dimension,
-        Skew_Dimension,
-    },
-    PX,
-    MIP,
-    XIP,
-    MTF::Multi_Foliation,
-    XTF,
-    Index,
-    Index_List,
-    Data,
-    Encoded_Phase;
-    Data_Max = 1.0,
-    Time_Step = 1.0,
-    Transformation = PM.Transformation,
-    Slice_Transformation = Transformation,
+    Backbone_Curves,
+    Data_Max_Pre;
     Label = "Data",
-    Color = Makie.wong_colors()[1],
-    Hz = false,
-    Damping_By_Derivative::Bool = true,
-    Model_IC = false,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
-    axDense = content(fig[1, 1])
-    axErr = content(fig[1, 2])
+    Color = Makie.wong_colors()[2],
+    Amplitude_Scale = 1,
+)
     axFreq = content(fig[1, 4])
     axDamp = content(fig[1, 5])
+    Data_Max = Amplitude_Scale * Data_Max_Pre
+    Amplitudes = Amplitude_Scale * Backbone_Curves.Amplitude
+    Plot_Id = (Data_Max > 0) ? findall(Amplitudes .<= Data_Max) : eachindex(Amplitudes)
+    Non_Plot_Id = setdiff(eachindex(Amplitudes), Plot_Id)
 
-    RR, TT, AA = Curves(
-        PM,
-        PX,
-        Transformation = Slice_Transformation,
-        Damping_By_Derivative = Damping_By_Derivative,
+    lines!(
+        axFreq,
+        Backbone_Curves.Frequency[Plot_Id],
+        Amplitudes[Plot_Id],
+        label = Label,
+        color = Color,
     )
-    if Hz
-        Frequency = TT ./ (2 * pi * Time_Step)
-        lines!(axFreq, Frequency, AA, label = Label, color = Color)
+    lines!(
+        axDamp,
+        Backbone_Curves.Damping_Ratio[Plot_Id],
+        Amplitudes[Plot_Id],
+        label = Label,
+        color = Color,
+    )
+    lines!(
+        axFreq,
+        Backbone_Curves.Frequency[Non_Plot_Id],
+        Amplitudes[Non_Plot_Id],
+        label = Label,
+        color = Color,
+        linestyle = :dot,
+    )
+    lines!(
+        axDamp,
+        Backbone_Curves.Damping_Ratio[Non_Plot_Id],
+        Amplitudes[Non_Plot_Id],
+        label = Label,
+        color = Color,
+        linestyle = :dot,
+    )
+
+    if Data_Max > 0
+        f_limits = axFreq.limits.val
+        Data_Max_Current =
+            isnothing(f_limits[2]) ? Data_Max : max(Data_Max, maximum(f_limits[2]))
+        ylims!(axFreq, 0, Data_Max_Current)
+        ylims!(axDamp, 0, Data_Max_Current)
+        #
+        min_f = minimum(Backbone_Curves.Frequency[Plot_Id])
+        max_f = maximum(Backbone_Curves.Frequency[Plot_Id])
+        margin_f = (max_f - min_f) / 10
+        max_f += margin_f
+        min_f = max(0, min_f - margin_f)
+        if any([typeof(k) <: Lines for k in axFreq.scene])
+            f_limits = axFreq.limits.val
+            if !isnothing(f_limits[1])
+                min_f = min(min_f, f_limits[1][1])
+                max_f = max(max_f, f_limits[1][2])
+            end
+        end
+        min_d = minimum(Backbone_Curves.Damping_Ratio[Plot_Id])
+        max_d = maximum(Backbone_Curves.Damping_Ratio[Plot_Id])
+        margin_d = (max_d - min_d) / 10
+        max_d += margin_d
+        min_d = max(0, min_d - margin_d)
+        if any([typeof(k) <: Lines for k in axDamp.scene])
+            d_limits = axDamp.limits.val
+            if !isnothing(d_limits[1])
+                min_d = min(min_d, d_limits[1][1])
+                max_d = max(max_d, d_limits[1][2])
+            end
+        end
+        xlims!(axFreq, min_f, max_f)
+        #
+        xlims!(axDamp, min_d, max_d)
+    end
+    if Backbone_Curves.Hz
         axFreq.xlabel = "Frequency [Hz]"
     else
-        Frequency = TT ./ Time_Step
-        lines!(axFreq, Frequency, AA, label = Label, color = Color)
         axFreq.xlabel = "Frequency [rad/s]"
     end
-    Damping_Ratio = -log.(abs.(RR)) ./ TT
-    lines!(axDamp, Damping_Ratio, AA, label = Label, color = Color)
-    MTF_Cache, Data_Max = Plot_Data_Error!(
-        fig,
-        PM,
-        PX,
-        MIP,
-        XIP,
-        MTF,
-        XTF,
-        Index,
-        Index_List,
-        Data,
-        Encoded_Phase;
-        Transformation = Transformation,
-        Color = Color,
-        Model_IC = Model_IC,
-    )
-    if Data_Max > 0
-        ylims!(axDense, 0, Data_Max)
-        ylims!(axErr, 0, Data_Max)
-        ylims!(axFreq, 0, Data_Max)
-        ylims!(axDamp, 0, Data_Max)
-        #
-        Plot_Id = findall(AA .<= Data_Max)
-        #
-        min_f = minimum(Frequency[Plot_Id])
-        max_f = maximum(Frequency[Plot_Id])
-        margin_f = (max_f - min_f) / 10
-        xlims!(axFreq, max(0, min_f - margin_f), min(2 / Time_Step, max_f + margin_f))
-        #
-        min_d = minimum(Damping_Ratio[Plot_Id])
-        max_d = maximum(Damping_Ratio[Plot_Id])
-        margin_d = (max_d - min_d) / 10
-        xlims!(axDamp, max(0, min_d - margin_d), min(1, max_d + margin_d))
-    end
-    return MTF_Cache
+    return nothing
 end
 
 """
-    Plot_Model_Result!(
-        fig,
-        PM::Polar_Manifold,
-        PX;
-        Time_Step = 1.0,
-        Label = "MAP Model",
+    Plot_Error_Curves!(
+        fig, Error_Curves, Data_Max_Pre;
         Color = Makie.wong_colors()[2],
-        Hz = false,
-        Damping_By_Derivative::Bool = true,
+        Dense_Style = :solid,
+        Max_Style = :dot,
+        Mean_Style = :solid,
+        Amplitude_Scale = 1,
     )
 
-Display the instantaneous frequency and damping ratio for the invariant manifold directly calculated from an ODE or map model.
-* `fig` the figure to plot to
-* `PM`, `PX` the invariant manifold calculated by [`Find_ODE_Manifold`](@ref) or [`Find_MAP_Manifold`](@ref)
-* `Time_Step` sampling time-step of data for calulating frequencies
-* `Color` line colour of the plot
-* `Hz` if `true` frequency is displayed in Hz, otherwise it is rad/s.
-* `Damping_By_Derivative` if `true` a truely instantaneous damping ratio is displayed.
-    If `false` the damping ratio commonly (and mistakenly) used in the literature is displayed
+*    `fig` is the figure to plot
+*    `Error_Curves` produced by [`Data_Error`](@ref)
+*    `Data_Max_Pre` the maximum amplitude to consider
+*    `Color` line colour
+*    `Dense_Style` line style for density
+*    `Max_Style` line style for maximum error
+*    `Mean_Style` line style for mean error
+*    `Amplitude_Scale` a scaling factor for amplitudes. This can be use because the result is in different units.
 """
-function Plot_Model_Result!(
+function Plot_Error_Curves!(
     fig,
-    PM::Polar_Manifold{
-        State_Dimension,
-        Latent_Dimension,
-        Radial_Order,
-        Radial_Dimension,
-        Phase_Dimension,
-        Skew_Dimension,
-    },
-    PX;
-    Time_Step = 1.0,
-    Label = "MAP Model",
+    Error_Curves,
+    Data_Max_Pre;
     Color = Makie.wong_colors()[2],
-    Hz = false,
-    Damping_By_Derivative::Bool = true,
-) where {
-    State_Dimension,
-    Latent_Dimension,
-    Radial_Order,
-    Radial_Dimension,
-    Phase_Dimension,
-    Skew_Dimension,
-}
-    #
+    Dense_Style = :solid,
+    Max_Style = :dot,
+    Mean_Style = :solid,
+    Amplitude_Scale = 1,
+)
     axDense = content(fig[1, 1])
     axErr = content(fig[1, 2])
-    axFreq = content(fig[1, 4])
-    axDamp = content(fig[1, 5])
-    #
-    RR, TT, AA = Curves(PM, PX; Damping_By_Derivative = Damping_By_Derivative)
-    if Hz
-        lines!(axFreq, TT ./ (2 * pi * Time_Step), AA, label = Label, color = Color)
-    else
-        lines!(axFreq, TT ./ Time_Step, AA, label = Label, color = Color)
+    Data_Max = Amplitude_Scale * Data_Max_Pre
+    Density_Amplitude = Amplitude_Scale * Error_Curves.Density_Amplitude
+    Error_Max_Amplitude = Amplitude_Scale * Error_Curves.Error_Max_Amplitude
+    Error_Mean_Amplitude = Amplitude_Scale * Error_Curves.Error_Mean_Amplitude
+    lines!(
+        axDense,
+        Error_Curves.Density_Value,
+        Density_Amplitude,
+        color = Color,
+        linewidth = 2,
+        linestyle = Dense_Style,
+    )
+    lines!(
+        axErr,
+        Error_Curves.Error_Max,
+        Error_Max_Amplitude,
+        color = Color,
+        linewidth = 2,
+        linestyle = Max_Style,
+    )
+    lines!(
+        axErr,
+        Error_Curves.Error_Mean,
+        Error_Mean_Amplitude,
+        color = Color,
+        linewidth = 2,
+        linestyle = Mean_Style,
+    )
+    if Data_Max > 0
+        f_limits = axDense.limits.val
+        Data_Max_Current =
+            isnothing(f_limits[2]) ? Data_Max : max(Data_Max, maximum(f_limits[2]))
+        ylims!(axDense, 0, Data_Max_Current)
+        ylims!(axErr, 0, Data_Max_Current)
     end
-    lines!(axDamp, -log.(abs.(RR)) ./ TT, AA, label = Label, color = Color)
-    return fig
+    return nothing
 end

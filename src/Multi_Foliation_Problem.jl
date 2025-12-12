@@ -1,7 +1,9 @@
-struct Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension}
-    MTF::Multi_Foliation{M,State_Dimension,Skew_Dimension}
+# SPDX-License-Identifier: EUPL-1.2
+
+struct Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension}
+    MTF::Multi_Foliation{M, State_Dimension, Skew_Dimension}
     XTF::Any
-    MTF_Cache::Multi_Foliation_Cache{M,State_Dimension,Skew_Dimension}
+    MTF_Cache::Multi_Foliation_Cache{M, State_Dimension, Skew_Dimension}
     Index_List::Any
     Data_Decomposed::Any
     Encoded_Phase::Any
@@ -67,31 +69,32 @@ Creates an object with multiple foliations that can be fitted to the data.
     otherwise has no effect.
 """
 function Multi_Foliation_Problem(
-    Index_List,
-    Data_Decomposed,
-    Encoded_Phase;
-    Selection::NTuple{M,Vector{Int}},
-    Model_Orders::NTuple{M,Int},
-    Encoder_Orders::NTuple{M,Int},
-    Unreduced_Model,
-    Reduced_Model,
-    Reduced_Encoder,
-    SH,
-    Initial_Iterations = 32,
-    Scaling_Parameter = 2^(-4),
-    Initial_Scaling_Parameter = 2^(-4),
-    Scaling_Order = Linear_Scaling,
-    node_ratio = 0.8,
-    leaf_ratio = 0.8,
-    max_rank = 48,
-    Linear_Type::NTuple{M,Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
-    Nonlinear_Type::NTuple{M,Encoder_Nonlinear_Type} = ntuple(
-        i -> Encoder_Compressed_Latent_Linear,
-        M,
-    ),
-    Name = "MTF-output",
-    Time_Step = 1.0,
-) where {M}
+        Index_List,
+        Data_Decomposed,
+        Encoded_Phase;
+        Selection::NTuple{M, Vector{Int}},
+        Model_Orders::NTuple{M, Int},
+        Encoder_Orders::NTuple{M, Int},
+        Unreduced_Model,
+        Reduced_Model,
+        Reduced_Encoder,
+        SH,
+        Initial_Iterations = 32,
+        Scaling_Parameter = 2^(-4),
+        Initial_Scaling_Parameter = 2^(-4),
+        Scaling_Order = Linear_Scaling,
+        node_ratio = 0.8,
+        leaf_ratio = 0.8,
+        max_rank = 48,
+        Linear_Type::NTuple{M, Encoder_Linear_Type} = ntuple(i -> Encoder_Array_Stiefel, M),
+        Nonlinear_Type::NTuple{M, Encoder_Nonlinear_Type} = ntuple(
+            i -> Encoder_Compressed_Latent_Linear,
+            M,
+        ),
+        Name = "MTF-output",
+        Time_Step = 1.0,
+        Train_Model = true,
+    ) where {M}
     State_Dimension = size(Data_Decomposed, 1)
     Skew_Dimension = size(Encoded_Phase, 1)
     Trajectories = length(Index_List) - 1
@@ -139,16 +142,16 @@ function Multi_Foliation_Problem(
         Index_List,
         Data_Decomposed,
         Encoded_Phase;
-        Model = true,
+        Model = Train_Model,
         Shift = false,
-        Big_Jac = true,
+        IC_Only = false,
         Scaling_Parameter = Initial_Scaling_Parameter,
         Iterations = Initial_Iterations,
         Model_IC = false,
         Time_Step = Time_Step,
     )
 
-    return Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension}(
+    return Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension}(
         MTF,
         XTF,
         MTF_Cache,
@@ -181,16 +184,16 @@ The test data in `Index_List`, `Data_Decomposed` and `Encoded_Phase`. `MTFP` is 
 `Initial_Scaling_Parameter` has the same meaning as in [`Multi_Foliation_Problem`](@ref) but applied to the testing data.
 """
 function Multi_Foliation_Test_Problem(
-    MTFP::Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension},
-    Index_List,
-    Data_Decomposed,
-    Encoded_Phase;
-    Initial_Scaling_Parameter = 2^(-4),
-) where {M,State_Dimension,Skew_Dimension}
+        MTFP::Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension},
+        Index_List,
+        Data_Decomposed,
+        Encoded_Phase;
+        Initial_Scaling_Parameter = 2^(-4),
+    ) where {M, State_Dimension, Skew_Dimension}
     MTF, XTF = Make_Similar(MTFP.MTF, MTFP.XTF, length(Index_List) - 1)
     # zero the initial conditions
-    for Index = 1:M
-        for k = 1:(length(Index_List)-1)
+    for Index in 1:M
+        for k in 1:(length(Index_List) - 1)
             XTF.x[Index].x[1].IC[:, k] .= 0
         end
     end
@@ -203,9 +206,10 @@ function Multi_Foliation_Test_Problem(
         Model = false,
         Model_IC = true,
         Shift = false,
+        IC_Only = true,
         Scaling_Parameter = Initial_Scaling_Parameter,
     )
-    return Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension}(
+    return Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension}(
         MTF,
         XTF,
         MTF_Cache,
@@ -243,15 +247,15 @@ Fits the set of foliations defined in `MTFP` to the given data.
 * `Picks` Used for testing the code, leave as is.
 """
 function Optimise!(
-    MTFP::Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension},
-    MTFP_Test::Union{Nothing,Multi_Foliation_Problem{M,State_Dimension,Skew_Dimension}} = nothing;
-    Model_Iterations = 16,
-    Encoder_Iterations = 8,
-    Steps = 128,
-    Gradient_Ratio = 2^(-7),
-    Gradient_Stop = 2^(-29),
-    Picks = [Complete_Component_Index(MTFP.XTF.x[k].x[2], (1,)) for k = 1:M],
-) where {M,State_Dimension,Skew_Dimension}
+        MTFP::Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension},
+        MTFP_Test::Union{Nothing, Multi_Foliation_Problem{M, State_Dimension, Skew_Dimension}} = nothing;
+        Model_Iterations = 16,
+        Encoder_Iterations = 8,
+        Steps = 128,
+        Gradient_Ratio = 2^(-7),
+        Gradient_Stop = 2^(-29),
+        Picks = [Complete_Component_Index(MTFP.XTF.x[k].x[2], (1,)) for k in 1:M],
+    ) where {M, State_Dimension, Skew_Dimension}
     Index_List = MTFP.Index_List
     Data_Decomposed = MTFP.Data_Decomposed
     Encoded_Phase = MTFP.Encoded_Phase
@@ -261,7 +265,8 @@ function Optimise!(
     # when the testing error is minimal...
     XTF_Best = zero(MTF)
     # training traces
-    Component_Trace = Array{Any,2}(undef, M, Steps)
+    Component_Trace = Array{Any, 2}((undef), M, Steps)
+    Component_Trace .= (0,)
     Train_Error = zeros(eltype(Data_Decomposed), size(Data_Decomposed, 2), M)
     Train_Loss_Trace = zeros(eltype(Data_Decomposed), M, Steps)
     Train_Error_Trace = zeros(eltype(Data_Decomposed), 3, M, Steps) # mean, std, max
@@ -278,10 +283,10 @@ function Optimise!(
         isnothing(MTFP_Test) ? [] : zeros(eltype(MTFP_Test.Data_Decomposed), M, Steps)
     Test_Radii = isnothing(MTFP_Test) ? [] : ones(eltype(MTFP_Test.Data_Decomposed), 3, M)
     # counts the components of the Encoders
-    Component_Pick = Array{Any,1}(undef, M)
+    Component_Pick = Array{Any, 1}(undef, M)
     Component_Pick .= Picks
-    for Step = 1:Steps
-        Threads.@threads for Index = 1:M
+    for Step in 1:Steps
+        Threads.@threads for Index in 1:M
             Component_Trace[Index, Step] = deepcopy(Component_Pick[Index])
             Optimise_Next!(
                 MTF[Index],
@@ -369,6 +374,7 @@ function Optimise!(
                         Radius = Test_Radii[Index],
                         Maximum_Radius = Maximum_Radius,
                         Iterations = Model_Iterations,
+                        Model_Index = Index,
                     )
                     if Test_Radii[Index] > Maximum_Radius / 8
                         Test_Radii[Index] = Maximum_Radius / 8
@@ -419,15 +425,15 @@ function Optimise!(
             end
             # ----------------- END TESTING ------------------------#
         end
-        To_Orthogonalise = false
-        for Index = 1:M
-            if Component_Trace[Index, Step] == (2, 2) # the linear part
-                To_Orthogonalise = true
-            end
-        end
-        if To_Orthogonalise
-            Make_Orthogonal!(MTF, XTF)
-        end
+        #         To_Orthogonalise = false
+        #         for Index = 1:M
+        #             if Component_Trace[Index, Step] == (2, 2) # the linear part
+        #                 To_Orthogonalise = true
+        #             end
+        #         end
+        #         if To_Orthogonalise
+        #             Make_Orthogonal!(MTF, XTF)
+        #         end
         Update_Scaling_All!(Cache, MTF, XTF, Index_List, Data_Decomposed, Encoded_Phase)
         println("Saving into file: ", MTFP.Name * ".bson")
         if !isnothing(MTFP_Test)
@@ -460,6 +466,8 @@ function Optimise!(
                 :Train_Error_Trace => Train_Error_Trace,
                 :Test_Loss_Trace => Test_Loss_Trace,
                 :Test_Error_Trace => Test_Error_Trace,
+                # format = :bson,
+                compression = :gzip_fastest,
             )
         else
             JLSO.save(
@@ -470,6 +478,8 @@ function Optimise!(
                 :Component_Trace => Component_Trace,
                 :Train_Loss_Trace => Train_Loss_Trace,
                 :Train_Error_Trace => Train_Error_Trace,
+                # format = :bson,
+                compression = :gzip_fastest,
             )
         end
         meminfo_julia()
