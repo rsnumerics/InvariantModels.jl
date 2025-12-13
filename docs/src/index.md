@@ -292,23 +292,11 @@ Extract_Manifold_Embedding
 ```
 
 ```@docs
-Create_Plot
+Data_Result
 ```
 
 ```@docs
-Plot_Data_Result!
-```
-
-```@docs
-Plot_Data_Error!
-```
-
-```@docs
-Plot_Error_Trace
-```
-
-```@docs
-Annotate_Plot!
+Data_Error
 ```
 
 ### Calculating invariant manifolds from ODEs and maps
@@ -322,5 +310,23 @@ Find_MAP_Manifold
 ```
 
 ```@docs
-Plot_Model_Result!
+Model_Result
+```
+
+### Plotting results
+
+```@docs
+Create_Plot
+```
+
+```@docs
+Plot_Error_Curves!
+```
+
+```@docs
+Plot_Error_Trace
+```
+
+```@docs
+Annotate_Plot!
 ```

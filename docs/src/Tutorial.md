@@ -367,9 +367,9 @@ MP, XP = Find_ODE_Manifold(
 ```
 
 Plotting the backbone curves calculated from the vector field.
-Documentation is at [`Plot_Model_Result!`](@ref).
+Documentation is at [`Model_Result`](@ref).
 ```@example ct
-    Plot_Model_Result!(fig, MP, XP, Hz = false)
+ODE_Backbone_Curves = Model_Result(MP, XP, Hz = false)
 ```
 
 ### Calculating the invariant manifold from the discrete-time map
@@ -421,10 +421,9 @@ PM, PX = Find_MAP_Manifold(
 ```
 
 Plotting the backbone curves calculated from the discrete-time map.
-Documentation is at [`Plot_Model_Result!`](@ref).
+Documentation is at [`Model_Result`](@ref).
 ```@example ct
-Plot_Model_Result!(
-    fig,
+MAP_Backbone_Curves = Model_Result(
     PM,
     PX,
     Time_Step = Time_Step,
@@ -494,10 +493,9 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
 ```
 
 Plotting the backbone curves calculated from the invariant foliations.
-Documentation is at [`Plot_Data_Result!`](@ref).
+Documentation is at [`Data_Result`](@ref).
 ```@example ct
-MTF_Cache = Plot_Data_Result!(
-    fig,
+MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
     PPM,
     PPX,
     MIP,
@@ -517,10 +515,9 @@ nothing; #hide
 ```
 
 Plotting the training and testing error as they vary with amplitude.
-Documentation is at [`Plot_Data_Error!`](@ref).
+Documentation is at [`Data_Error`](@ref).
 ```@example ct
-MTF_Cache, Data_Max = Plot_Data_Error!(
-    fig,
+MTF_Cache, Data_Max_TEST, TEST_Error_Curves = Data_Error(
     PPM,
     PPX,
     MIP,
@@ -532,15 +529,18 @@ MTF_Cache, Data_Max = Plot_Data_Error!(
     Data_Decomp_T,
     Encoded_Phase_T;
     Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
-    Color = Makie.wong_colors()[2],
     Model_IC = true,
 )
 nothing; #hide
 ```
 
-Plotting the history of training and testing error values for each iteration of the optimisation method.
-Documentation is at [`Plot_Error_Trace`](@ref).
+Plotting the results of all previous calculations including the history of training and testing error values for each iteration of the optimisation method.
 ```@example ct
+Plot_Backbone_Curves!(fig, ODE_Backbone_Curves, Data_Max; Label = "ODE", Color = Makie.wong_colors()[2])
+Plot_Backbone_Curves!(fig, MAP_Backbone_Curves, Data_Max; Label = "MAP", Color = Makie.wong_colors()[3])
+Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
 Plot_Error_Trace(fig, Index, Error_Trace, Test_Trace)
 ```
 
