@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · InvariantModels.jl</title><meta name="title" content="Tutorial · InvariantModels.jl"/><meta property="og:title" content="Tutorial · InvariantModels.jl"/><meta property="twitter:title" content="Tutorial · InvariantModels.jl"/><meta name="description" content="Documentation for InvariantModels.jl."/><meta property="og:description" content="Documentation for InvariantModels.jl."/><meta property="twitter:description" content="Documentation for InvariantModels.jl."/><meta property="og:url" content="https://rsnumerics.github.io/InvariantModels.jl/Tutorial/"/><meta property="twitter:url" content="https://rsnumerics.github.io/InvariantModels.jl/Tutorial/"/><link rel="canonical" href="https://rsnumerics.github.io/InvariantModels.jl/Tutorial/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">InvariantModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Identifying-the-invariant-foliations"><span>Identifying the invariant foliations</span></a></li><li><a class="tocitem" href="#Analysing-the-the-calculated-invariant-foliations"><span>Analysing the the calculated invariant foliations</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/rsnumerics/InvariantModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/rsnumerics/InvariantModels.jl/blob/main/docs/src/Tutorial.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="A-simple-autonomous-system"><a class="docs-heading-anchor" href="#A-simple-autonomous-system">A simple autonomous system</a><a id="A-simple-autonomous-system-1"></a><a class="docs-heading-anchor-permalink" href="#A-simple-autonomous-system" title="Permalink"></a></h1><h2 id="Identifying-the-invariant-foliations"><a class="docs-heading-anchor" href="#Identifying-the-invariant-foliations">Identifying the invariant foliations</a><a id="Identifying-the-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Identifying-the-invariant-foliations" title="Permalink"></a></h2><p>This tutorial goes through the steps of</p><ul><li>How to produce training and test data from a differential equation</li><li>How to process the data so that it is suitable for finding invariant foliations</li><li>How to fit invariant foliations to data</li><li>How to calculate invariant manifolds from differential equations and discrete-time maps</li><li>How to extract invariant manifolds from the identified invariant foliations</li><li>How to assess the quality of obtained mathematical model</li></ul><p>The differential equations is</p><p class="math-container">\[\dot{\boldsymbol{x}} = \boldsymbol{T}^{-1} \boldsymbol{f}(\boldsymbol{T} \boldsymbol{x}),\]</p><p>where </p><p class="math-container">\[\boldsymbol{f}(\boldsymbol{x}) = 
+               \begin{pmatrix}
+                   -\alpha  x_1+\left(x_1^2+x_2^2\right) \left(\beta  x_1+\delta  x_2\right)+x_2 \\
+                   -\alpha x_2+\left(x_1^2+x_2^2\right) \left(\beta  x_2-\delta  x_1\right)-x_1 \\
+                   -2 \alpha  x_3
+                \end{pmatrix}.\]</p><p>The equation is selected to be nonlinear, but easy to investigate, so that the automatic test code runs quickly on slow hardware. Challenging problems can be found in the <code>Examples</code> folder.</p><p>Importing packages</p><pre><code class="language-julia hljs">using LinearAlgebra
+using Tullio
+using JLSO
+using Random
+using StaticArrays
+using InvariantModels
+using CairoMakie</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Creating-data-by-solving-a-differential-equation"><a class="docs-heading-anchor" href="#Creating-data-by-solving-a-differential-equation">Creating data by solving a differential equation</a><a id="Creating-data-by-solving-a-differential-equation-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-data-by-solving-a-differential-equation" title="Permalink"></a></h3><p>Setting up the differential equations.</p><pre><code class="language-julia hljs">ODE_Transformation = SMatrix{3,3}(0.180047, 0.914719, -0.361763, 0.337552, -0.402896, -0.850725, -0.923927, 0.0310566, -0.381306)
+
+function Tutorial_VF!(dx, x, u, Parameters)
+    Alpha = Parameters.Alpha
+    Beta = Parameters.Beta
+    Delta = Parameters.Delta
+    
+    z = ODE_Transformation * x
+    dz = SVector(
+        -Alpha*z[1] + z[2] + (Beta*z[1] + Delta*z[2])*(z[1]^2 + z[2]^2),
+        -z[1] - Alpha*z[2] + (-Delta*z[1] + Beta*z[2])*(z[1]^2 + z[2]^2),
+        -2*Alpha*z[3],
+        )
+    dx .= transpose(ODE_Transformation) * dz
+    
+    return dx
+end
+
+# no forcing
+function Tutorial_Forcing!(u, Alpha, Parameters)
+    return u
+end
+
+function Tutorial_Forcing_Matrix!(x, Parameters, t)
+    return Rigid_Rotation_Matrix!(x, [0], 0, t)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Setting up parameters, time steps, etc</p><pre><code class="language-julia hljs">Name = &quot;Tutorial&quot;
+Skew_Dimension = 1
+Training_Trajectories = 1
+Testing_Trajectories = 1
+Trajectory_Length = 2400
+
+Forcing_Grid = Fourier_Grid(Skew_Dimension)
+Parameters = (Alpha = 0.005, Beta = 0.005, Delta = 0.1)
+Time_Step = 0.5
+
+IC_x_Train = [0; 0.8; 0.1;;]
+IC_x_Test = [0.6; 0.1; 0;;]
+IC_Alpha_Train = ones(Skew_Dimension, Training_Trajectories)
+IC_Alpha_Test = ones(Skew_Dimension, Testing_Trajectories)
+IC_Force = []
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Generating training and testing data. Documentation is at <a href="../#InvariantModels.Generate_From_ODE"><code>Generate_From_ODE</code></a>.</p><pre><code class="language-julia hljs">List_of_Data, List_of_Phases = Generate_From_ODE(
+    Tutorial_VF!,
+    Tutorial_Forcing!,
+    Tutorial_Forcing_Matrix!,
+    Parameters,
+    Time_Step,
+    IC_x_Train,
+    IC_Force,
+    IC_Alpha_Train,
+    ones(Int, Training_Trajectories) * Trajectory_Length,
+)
+List_of_Data_T, List_of_Phases_T = Generate_From_ODE(
+    Tutorial_VF!,
+    Tutorial_Forcing!,
+    Tutorial_Forcing_Matrix!,
+    Parameters,
+    Time_Step,
+    IC_x_Test,
+    IC_Force,
+    IC_Alpha_Test,
+    ones(Int, Testing_Trajectories) * Trajectory_Length,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Processing-the-data"><a class="docs-heading-anchor" href="#Processing-the-data">Processing the data</a><a id="Processing-the-data-1"></a><a class="docs-heading-anchor-permalink" href="#Processing-the-data" title="Permalink"></a></h3><p>Chopping up the trajectories into 600 point long segments. There is a balance between short and long trajectory segments.  Longer segments increase accuracy, but tracking error over longer periods can make the calculation unstable. Documentation is at <a href="../#InvariantModels.Chop_And_Stitch"><code>Chop_And_Stitch</code></a>.</p><pre><code class="language-julia hljs">Index_List, Data, Encoded_Phase =
+    Chop_And_Stitch(List_of_Data, List_of_Phases; maxlen = 600)
+Index_List_T, Data_T, Encoded_Phase_T =
+    Chop_And_Stitch(List_of_Data_T, List_of_Phases_T; maxlen = 600)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>A linear model is identified from the data.  This model contains the steady state, the linear dynamics about the steady state, and the forcing dynamics <code>SH</code>. Documentation is at <a href="../#InvariantModels.Estimate_Linear_Model"><code>Estimate_Linear_Model</code></a>.</p><pre><code class="language-julia hljs">Scaling = ones(size(Data, 2)) # 1 ./ ((2^-12) .+ sqrt.(sum(Data .^ 2, dims = 1)))
+Steady_State, Linear_Model, SH = Estimate_Linear_Model(
+    Index_List,
+    Data,
+    Encoded_Phase,
+    Scaling;
+    Iterations = 0,
+    Order = 1,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>If the model is forced it can be a good idea to filter the linear model so that it does not contain the high frequency content of the noise. The foloowing line has no effect for autonomous systems, only included for completeness. Documentation is at <a href="../#InvariantModels.Filter_Linear_Model"><code>Filter_Linear_Model</code></a>.</p><pre><code class="language-julia hljs"># filtering up to 2 harmonics
+Linear_Model_Filtered = Filter_Linear_Model(Linear_Model, Forcing_Grid, 1)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Calculating the invariant vector bundles of the linear model, using the eigenvalues and eigenvectors of the transfer operator, see <a href="../#InvariantModels.Create_Linear_Decomposition"><code>Create_Linear_Decomposition</code></a>.  This creates tranformations that will bring the data into a coordinate system where the linear model is approximately block diagonal.</p><pre><code class="language-julia hljs">Decomp = Create_Linear_Decomposition(
+    Linear_Model_Filtered,
+    SH;
+    Time_Step = Time_Step,
+    Reduce = true,
+    Align = true,
+    By_Eigen = true,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Decomposing the data into the coordinate system of the invariant vector bundles. Documentation is at <a href="../#InvariantModels.Decompose_Data"><code>Decompose_Data</code></a>.</p><pre><code class="language-julia hljs">Data_Decomp, _ =
+    Decompose_Data(Index_List, Data, Encoded_Phase, Steady_State, SH, Decomp.Data_Encoder)
+Data_Decomp_T, _ = 
+    Decompose_Data(Index_List_T, Data_T, Encoded_Phase_T, Steady_State, SH, Decomp.Data_Encoder)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Creating a scaling operation that makes sure that all data points are withing the unit ball of the phase space and that the signal amplitudes for each vector bundle are balanced. Documentation is at <a href="../#InvariantModels.Decomposed_Data_Scaling"><code>Decomposed_Data_Scaling</code></a>.</p><pre><code class="language-julia hljs">Data_Scale = Decomposed_Data_Scaling(Data_Decomp, Decomp.Bundles)
+Data_Decomp .*= Data_Scale
+Data_Decomp_T .*= Data_Scale
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Saving the data, so that it can be used later on, when evaluating the accuracy of the identified invariant foliations.</p><pre><code class="language-julia hljs">JLSO.save(
+    &quot;DATA-$(Name).bson&quot;,
+    :Parameters =&gt; Parameters,
+    :Time_Step =&gt; Time_Step,
+    :Index_List =&gt; Index_List,
+    :Data_Decomp =&gt; Data_Decomp,
+    :Encoded_Phase =&gt; Encoded_Phase,
+    :Index_List_T =&gt; Index_List_T,
+    :Data_Decomp_T =&gt; Data_Decomp_T,
+    :Encoded_Phase_T =&gt; Encoded_Phase_T,
+    :Decomp =&gt; Decomp,
+    :Steady_State =&gt; Steady_State,
+    :Linear_Model =&gt; Linear_Model_Filtered,
+    :SH =&gt; SH,
+    :Data_Scale =&gt; Data_Scale,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Fitting-the-data-to-a-set-of-invariant-foliations"><a class="docs-heading-anchor" href="#Fitting-the-data-to-a-set-of-invariant-foliations">Fitting the data to a set of invariant foliations</a><a id="Fitting-the-data-to-a-set-of-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Fitting-the-data-to-a-set-of-invariant-foliations" title="Permalink"></a></h3><p>Setting up the data structures of the invariant foliation. Here we select to hyper-parameters of the functional representations of the encoders and conjugate maps.  We also select how the error should be scaled within the loss function as a function of signal amplitude. Documentation is at <a href="../#InvariantModels.Multi_Foliation_Problem"><code>Multi_Foliation_Problem</code></a>.</p><pre><code class="language-julia hljs">MTFP = Multi_Foliation_Problem(
+    Index_List,
+    Data_Decomp,
+    Encoded_Phase,
+    Selection = ([1; 2], [3;]),
+    Model_Orders = (3, 1),
+    Encoder_Orders = (1, 1),
+    Unreduced_Model = Decomp.Unreduced_Model,
+    Reduced_Model = Decomp.Reduced_Model,
+    Reduced_Encoder = Decomp.Reduced_Encoder,
+    SH = SH,
+    Initial_Iterations = 32,
+    Scaling_Parameter = 2^(-2),
+    Initial_Scaling_Parameter = 2^(-2),
+    Scaling_Order = Linear_Scaling,
+    node_ratio = 0.8,
+    leaf_ratio = 1.0,
+    max_rank = 24,
+    Linear_Type = (Encoder_Array_Stiefel, Encoder_Array_Stiefel),
+    Nonlinear_Type = (Encoder_Dense_Latent_Linear, Encoder_Dense_Latent_Linear),
+    Name = &quot;MTF-$(Name)&quot;,
+    Time_Step = Time_Step,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Setting up the data structures for the testing data.  This is necessary, because <code>MTFP</code> includes estimates of initial conditions for latent trajectories, which are differentr for the testing data. The estimates of initial conditions for latent trajectories must be updated before calculating the testing error.  Documentation is at <a href="../#InvariantModels.Multi_Foliation_Test_Problem"><code>Multi_Foliation_Test_Problem</code></a>.</p><pre><code class="language-julia hljs">MTFP_Test = Multi_Foliation_Test_Problem(
+    MTFP,
+    Index_List_T,
+    Data_Decomp_T,
+    Encoded_Phase_T;
+    Initial_Scaling_Parameter = 2^(-2),
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Finally, we are fitting the invariant foliations to data. Documentation is at <a href="../#InvariantModels.Optimise!"><code>Optimise!</code></a>.</p><pre><code class="language-julia hljs">Optimise!(
+    MTFP,
+    MTFP_Test;
+    Model_Iterations = 16,
+    Encoder_Iterations = 8,
+    Steps = 12,
+    Gradient_Ratio = 2^(-7),
+    Gradient_Stop = 2^(-29),
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h2 id="Analysing-the-the-calculated-invariant-foliations"><a class="docs-heading-anchor" href="#Analysing-the-the-calculated-invariant-foliations">Analysing the the calculated invariant foliations</a><a id="Analysing-the-the-calculated-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Analysing-the-the-calculated-invariant-foliations" title="Permalink"></a></h2><p>Setting the index of the vector bundle for which the results are analysed</p><pre><code class="language-julia hljs">Index = 1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Loading the data. Here it is not strictly necessary, because these are already in memory.  However, if a separate script is use to analyse the results, data and the results must be loaded.</p><pre><code class="language-julia hljs">data = JLSO.load(&quot;DATA-$(Name).bson&quot;)
+Parameters      = data[:Parameters]
+Time_Step       = data[:Time_Step]
+Index_List      = data[:Index_List]
+Data_Decomp     = data[:Data_Decomp]
+Encoded_Phase   = data[:Encoded_Phase]
+Index_List_T    = data[:Index_List_T]
+Data_Decomp_T   = data[:Data_Decomp_T]
+Encoded_Phase_T = data[:Encoded_Phase_T]
+Decomp          = data[:Decomp]
+Steady_State    = data[:Steady_State]
+Linear_Model    = data[:Linear_Model]
+SH              = data[:SH]
+Data_Scale      = data[:Data_Scale]
+#
+Data_Encoder      = Decomp.Data_Encoder
+Data_Decoder      = Decomp.Data_Decoder
+State_Dimension   = size(Data_Decomp, 1)
+Skew_Dimension    = size(Encoded_Phase, 1)
+IC_Force = []
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Loading the identified invariant foliations.</p><pre><code class="language-julia hljs">dd = JLSO.load(&quot;MTF-$(Name).bson&quot;)
+MTF = dd[:MTF]
+XTF = dd[:XTF]
+MTF_Test = dd[:Test_MTF]
+XTF_Test = dd[:Test_XTF]
+Error_Trace = dd[:Train_Error_Trace]
+Test_Trace = dd[:Test_Error_Trace]
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Creating a figure for plotting the results</p><pre><code class="language-julia hljs">fig = Create_Plot()
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Calculating-the-invariant-manifold-from-the-differential-equation"><a class="docs-heading-anchor" href="#Calculating-the-invariant-manifold-from-the-differential-equation">Calculating the invariant manifold from the differential equation</a><a id="Calculating-the-invariant-manifold-from-the-differential-equation-1"></a><a class="docs-heading-anchor-permalink" href="#Calculating-the-invariant-manifold-from-the-differential-equation" title="Permalink"></a></h3><p>Creating a polynomial vector field to be analysed subsequently. Documentation is at <a href="../#InvariantModels.Model_From_Function_Alpha"><code>Model_From_Function_Alpha</code></a>.</p><pre><code class="language-julia hljs">MM, MX, MD = Model_From_Function_Alpha(
+    Tutorial_VF!,
+    Tutorial_Forcing!,
+    p -&gt; Rigid_Rotation_Generator([0], 0.0),
+    IC_Force,
+    Parameters;
+    State_Dimension = State_Dimension,
+    Start_Order = 0,
+    End_Order = 3,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Setting the parameters of the invariant manifold representation. We use piecewise cubic polynomials in the radia direction and 11 Fourier collocation points in the angular direction. The maximum amplutude to calculate is <code>Radius</code>.</p><pre><code class="language-julia hljs">Radius = 1.0
+Radial_Order = 2
+Radial_Intervals = 96
+Polar_Order = 11</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Calculating the invariant manifold from the vector field.  Documentation is at <a href="../#InvariantModels.Find_ODE_Manifold"><code>Find_ODE_Manifold</code></a>.</p><pre><code class="language-julia hljs">MP, XP = Find_ODE_Manifold(
+    MM, MX, MD,
+    [1;2];
+    Radial_Order = Radial_Order,
+    Radial_Intervals = Radial_Intervals,
+    Radius = Radius,
+    Phase_Dimension = Polar_Order,
+    abstol = 1e-9,
+    reltol = 1e-9,
+    maxiters = 32,
+    initial_maxiters = 200,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Plotting the backbone curves calculated from the vector field. Documentation is at <a href="../#InvariantModels.Model_Result"><code>Model_Result</code></a>.</p><pre><code class="language-julia hljs">ODE_Backbone_Curves = Model_Result(MP, XP, Hz = false)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Calculating-the-invariant-manifold-from-the-discrete-time-map"><a class="docs-heading-anchor" href="#Calculating-the-invariant-manifold-from-the-discrete-time-map">Calculating the invariant manifold from the discrete-time map</a><a id="Calculating-the-invariant-manifold-from-the-discrete-time-map-1"></a><a class="docs-heading-anchor-permalink" href="#Calculating-the-invariant-manifold-from-the-discrete-time-map" title="Permalink"></a></h3><p>Creates a discrete-time model from the vector field.  This is done by Taylor expanding a differential equation solver using automatic differentiation. Documentation is at <a href="../#InvariantModels.Model_From_ODE"><code>Model_From_ODE</code></a>.</p><pre><code class="language-julia hljs">MM, MX = Model_From_ODE(
+    Tutorial_VF!,
+    Tutorial_Forcing!,
+    Tutorial_Forcing_Matrix!,
+    IC_Force,
+    Parameters,
+    Time_Step / 512,
+    Time_Step,
+    State_Dimension = State_Dimension,
+    Skew_Dimension = Skew_Dimension,
+    Start_Order = 0,
+    End_Order = 5,
+    Steady_State = true,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Setting the parameters of the invariant manifold representation.</p><pre><code class="language-julia hljs">Radius = 1.0
+Cheb_Order = 2
+Cheb_Intervals = 96
+Polar_Order = 11</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Calculating the invariant manifold from the discrete-time map. Documentation is at <a href="../#InvariantModels.Find_MAP_Manifold"><code>Find_MAP_Manifold</code></a>.</p><pre><code class="language-julia hljs">PM, PX = Find_MAP_Manifold(
+    MM, MX,
+    [1;2];
+    Radial_Order = Cheb_Order,
+    Radial_Intervals = Cheb_Intervals,
+    Radius,
+    Phase_Dimension = Polar_Order,
+    abstol = 1e-9,
+    reltol = 1e-9,
+    maxiters = 32,
+    initial_maxiters = 200,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Plotting the backbone curves calculated from the discrete-time map. Documentation is at <a href="../#InvariantModels.Model_Result"><code>Model_Result</code></a>.</p><pre><code class="language-julia hljs">MAP_Backbone_Curves = Model_Result(
+    PM,
+    PX,
+    Time_Step = Time_Step,
+    Hz = false,
+    Damping_By_Derivative = true,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><h3 id="Calculating-the-invariant-manifold-from-the-set-of-invariant-foliations"><a class="docs-heading-anchor" href="#Calculating-the-invariant-manifold-from-the-set-of-invariant-foliations">Calculating the invariant manifold from the set of invariant foliations</a><a id="Calculating-the-invariant-manifold-from-the-set-of-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Calculating-the-invariant-manifold-from-the-set-of-invariant-foliations" title="Permalink"></a></h3><p>Setting the parameters of the invariant manifold representation.</p><pre><code class="language-julia hljs">Radius = 1.0
+Cheb_Order = 2
+Cheb_Intervals = 112
+Polar_Order = 17</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Numerically calculating the invariant manifold from the identified invariant foliations. At the same time a normal form of the conjugate dynamics is calculated numerically. Documentation is at <a href="../#InvariantModels.Find_DATA_Manifold"><code>Find_DATA_Manifold</code></a>.</p><pre><code class="language-julia hljs">PPM, PPX = Find_DATA_Manifold(
+    MTF,
+    XTF,
+    SH,
+    Index;
+    Radial_Order = Cheb_Order,
+    Radial_Intervals = Cheb_Intervals,
+    Radius = Radius,
+    Phase_Dimension = Polar_Order,
+    Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
+    abstol = 1e-9,
+    reltol = 1e-9,
+    maxiters = 36,
+    initial_maxiters = 200,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Yet again, setting the parameters of the invariant manifold representation.</p><pre><code class="language-julia hljs">Radius = 1.0
+Cheb_Order = 2
+Cheb_Intervals = 120
+Polar_Order = 17</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Numerically calculating the invariant manifold from the identified invariant foliations.  This has the same parametrisation as the invariant foliation and therefore can be used to reconstruct the invariant manifold from the encoded trajectories. Documentation is at <a href="../#InvariantModels.Extract_Manifold_Embedding"><code>Extract_Manifold_Embedding</code></a>.</p><pre><code class="language-julia hljs">MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold_Embedding(
+    MTF, XTF, Index,
+    Data_Decomp,
+    Encoded_Phase;
+    Radial_Order = Cheb_Order,
+    Radial_Intervals = Cheb_Intervals,
+    Radius = Radius,
+    Phase_Dimension = Polar_Order,
+    Output_Transformation = Data_Encoder,
+    Output_Scale = vec(Data_Scale),
+    abstol = 1e-9,
+    reltol = 1e-9,
+    maxiters = 36,
+    initial_maxiters = 200,
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Plotting the backbone curves calculated from the invariant foliations. Documentation is at <a href="../#InvariantModels.Data_Result"><code>Data_Result</code></a>.</p><pre><code class="language-julia hljs">MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
+    PPM,
+    PPX,
+    MIP,
+    XIP,
+    MTF,
+    XTF,
+    Index,
+    Index_List,
+    Data_Decomp,
+    Encoded_Phase,
+    Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
+    Time_Step = Time_Step,
+    Hz = false,
+    Damping_By_Derivative = true,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Plotting the training and testing error as they vary with amplitude. Documentation is at <a href="../#InvariantModels.Data_Error"><code>Data_Error</code></a>.</p><pre><code class="language-julia hljs">MTF_Cache, Data_Max_TEST, TEST_Error_Curves = Data_Error(
+    PPM,
+    PPX,
+    MIP,
+    XIP,
+    MTF_Test,
+    XTF_Test,
+    Index,
+    Index_List_T,
+    Data_Decomp_T,
+    Encoded_Phase_T;
+    Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
+    Model_IC = true,
+)
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Plotting the results of all previous calculations including the history of training and testing error values for each iteration of the optimisation method.</p><pre><code class="language-julia hljs">Plot_Backbone_Curves!(fig, ODE_Backbone_Curves, Data_Max; Label = &quot;ODE&quot;, Color = Makie.wong_colors()[2])
+Plot_Backbone_Curves!(fig, MAP_Backbone_Curves, Data_Max; Label = &quot;MAP&quot;, Color = Makie.wong_colors()[3])
+Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = &quot;Data&quot;, Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
+Plot_Error_Trace(fig, Index, Error_Trace, Test_Trace)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p>Annotate the final figure with necessary information.</p><pre><code class="language-julia hljs">Annotate_Plot!(fig)
+save(&quot;FIGURE-FULL.svg&quot;, fig) #hide
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p><img src="FIGURE-FULL.svg" alt/></p><h3 id="Evaluating-the-model-and-comparing-to-testing-data"><a class="docs-heading-anchor" href="#Evaluating-the-model-and-comparing-to-testing-data">Evaluating the model and comparing to testing data</a><a id="Evaluating-the-model-and-comparing-to-testing-data-1"></a><a class="docs-heading-anchor-permalink" href="#Evaluating-the-model-and-comparing-to-testing-data" title="Permalink"></a></h3><p>Plotting the encoded testing trajectory and the predicted testing trajectory in the latent space.  The green line is the difference between prediction and the unseen data.</p><pre><code class="language-julia hljs">fig2 = Figure()
+
+Latent_Dimension = size(MTF_Cache.Parts[Index].Latent_Data, 1)
+Rows = round(Int, sqrt(Latent_Dimension))
+X_Axis = range(0, step = Time_Step, length = size(Data_Decomp_T, 2))
+let it = 0
+    let k = Index
+        for l = 1:size(MTF_Cache.Parts[k].Latent_Data, 1)
+            id = it + 1
+            ax = Makie.Axis(
+                fig2[1+div(it, Rows), 1+mod(it, Rows)],
+                xlabel = L&quot;$t$ [s]&quot;,
+                ylabel = L&quot;z_{%$id}&quot;,
+            )
+            lines!(
+                ax,
+                X_Axis,
+                MTF_Cache.Parts[k].Latent_Data[l, :],
+                color = Makie.wong_colors()[1],
+            )
+            lines!(
+                ax,
+                X_Axis,
+                MTF_Cache.Parts[k].Model_Cache.Values[l, :],
+                color = Makie.wong_colors()[2],
+            )
+            lines!(
+                ax,
+                X_Axis,
+                MTF_Cache.Parts[k].Latent_Data[l, :] -
+                MTF_Cache.Parts[k].Model_Cache.Values[l, :],
+                color = Makie.wong_colors()[3],
+            )
+            it += 1
+        end
+    end
+end
+save(&quot;FIGURE-LATENT.svg&quot;, fig2) #hide
+nothing; #hide</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&lt;&lt; @example-block not executed in draft mode &gt;&gt;</code></pre><p><img src="FIGURE-LATENT.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Saturday 13 December 2025 18:34">Saturday 13 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
