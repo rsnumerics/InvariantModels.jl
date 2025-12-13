@@ -46,10 +46,10 @@ function Shaw_Pierre_Forcing_Matrix!(x, Parameters, t)
 end
 
 Name = "SP_Oblique"
-# VER = "Autonomous"
-# DATAVER = "Autonomous"
-VER = "Forced"
-DATAVER = "Forced"
+VER = "Autonomous"
+DATAVER = "Autonomous"
+# VER = "Forced"
+# DATAVER = "Forced"
 
 data = JLSO.load("DATA-$(Name)-$(DATAVER).bson")
 Parameters      = data[:Parameters]
@@ -61,9 +61,9 @@ Index_List_T    = data[:Index_List_T]
 Data_Decomp_T   = data[:Data_Decomp_T]
 Encoded_Phase_T = data[:Encoded_Phase_T]
 Decomp          = data[:Decomp]
-Steady_State    = data[:Decomp].Steady_State # data[:Steady_State]
+Steady_State    = data[:Steady_State]
 # Linear_Model    = data[:Linear_Model]
-SH              = data[:Decomp].SH # data[:SH]
+SH              = data[:SH]
 Data_Scale      = data[:Data_Scale]
 #
 Data_Encoder      = Decomp.Data_Encoder

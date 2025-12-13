@@ -42,28 +42,28 @@ function Shaw_Pierre_Forcing_Matrix!(x, Parameters, t)
 end
 
 Name = "SP_Oblique"
-# VER = "Autonomous"
-# DATAVER = "Autonomous"
-VER = "Forced"
-DATAVER = "Forced"
+VER = "Autonomous"
+DATAVER = "Autonomous"
+# VER = "Forced"
+# DATAVER = "Forced"
 Generate = true
 Process = true
 
 # autonomous
-# Skew_Dimension = 1 # must be and odd number
-# Training_Trajectories = 5
-# Testing_Trajectories = 1
-# Forcing_Amplitude = 0.0
-# Omega_ODE = 2^(1 / 4)
-# Trajectory_Length = 1350
+Skew_Dimension = 1 # must be and odd number
+Training_Trajectories = 5
+Testing_Trajectories = 1
+Forcing_Amplitude = 0.0
+Omega_ODE = 2^(1 / 4)
+Trajectory_Length = 1350
 
 # forced
-Skew_Dimension = 19 # must be and odd number
-Training_Trajectories = 16
-Testing_Trajectories = 1
-Forcing_Amplitude = 0.04
-Omega_ODE = 2^(1/4)
-Trajectory_Length = 1350
+# Skew_Dimension = 19 # must be and odd number
+# Training_Trajectories = 16
+# Testing_Trajectories = 1
+# Forcing_Amplitude = 0.04
+# Omega_ODE = 2^(1/4)
+# Trajectory_Length = 1350
 
 Forcing_Grid = Fourier_Grid(Skew_Dimension)
 Parameters = (
@@ -189,6 +189,7 @@ if Process
         Time_Step=Time_Step,
         Reduce=true,
         Align=true,
+        By_Eigen=true,
         )
     Data_Decomp, _ = Decompose_Data(Index_List, Data, Encoded_Phase, Steady_State, SH, Decomp.Data_Encoder)
     Data_Decomp_T, _ = Decompose_Data(Index_List_T, Data_T, Encoded_Phase_T, Steady_State, SH, Decomp.Data_Encoder)

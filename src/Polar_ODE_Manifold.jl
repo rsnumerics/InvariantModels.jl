@@ -513,9 +513,9 @@ function Find_ODE_Manifold(
         )
         if (it > 1) && !SciMLBase.successful_retcode(sol)
             start_index = 2 + (it - 1) * (Radial_Order - 1)
-            PX.WW[:, start_index:end, :, :] .= NaN
-            PX.RR[start_index:end] .= NaN
-            PX.TT[start_index:end] .= NaN
+            XP.WW[:, start_index:end, :, :] .= NaN
+            XP.RR[start_index:end] .= NaN
+            XP.TT[start_index:end] .= NaN
             break
         end
         Set_Part!(MP, XP, Intervals, sol.u)

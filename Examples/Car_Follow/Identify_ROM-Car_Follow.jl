@@ -217,6 +217,7 @@ if Process
         Time_Step=Time_Step,
         Reduce=true,
         Align=true,
+        By_Eigen=true,
     )
     Data_Decomp, _ = Decompose_Data(Index_List, Data, Encoded_Phase, Steady_State, SH, Decomp.Data_Encoder)
     Data_Decomp_T, _ = Decompose_Data(Index_List_T, Data_T, Encoded_Phase_T, Steady_State, SH, Decomp.Data_Encoder)

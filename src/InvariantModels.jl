@@ -58,7 +58,7 @@ export Select_Bundles_By_Energy
 export Decompose_Data
 export Decomposed_Data_Scaling
 
-using DifferentialEquations
+using OrdinaryDiffEq
 using Interpolations
 using UnicodePlots
 include("Generate_From_ODE.jl")
