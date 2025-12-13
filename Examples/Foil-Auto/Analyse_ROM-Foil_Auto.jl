@@ -113,7 +113,7 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
 )
 
 ###
-MTF_Cache, DATA_Backbone, DATA_Error_Curves = Data_Result(
+MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
     PPM,
     PPX,
     MIP,
@@ -141,7 +141,6 @@ MTF_Cache, Data_Max, TEST_Error_Curves = Data_Error(
     Data_Decomp_T,
     Encoded_Phase_T;
     Transformation = Data_Decoder[1:3, :, :] ./ reshape(Data_Scale, 1, 1, :),
-    Color = Makie.wong_colors()[2],
     Model_IC = false,
 )
 
@@ -149,8 +148,8 @@ fig = Create_Plot()
 # Plot_Backbone_Curves!(fig, ODE_Backbone, Data_Max; Label = "ODE", Color = Makie.wong_colors()[2])
 # Plot_Backbone_Curves!(fig, MAP_Backbone, Data_Max; Label = "MAP", Color = Makie.wong_colors()[3])
 Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
-Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
-Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Label = "Data", Color = Makie.wong_colors()[2])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
 Plot_Error_Trace(fig, Index, Error_Trace, Test_Trace)
 Annotate_Plot!(fig)
 ###

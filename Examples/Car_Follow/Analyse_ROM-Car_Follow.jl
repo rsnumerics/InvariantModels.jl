@@ -74,10 +74,10 @@ function Car_Follow_Forcing_Matrix!(x, Parameters, t)
 end
 
 Name = "Car_Follow"
-# VER = "Autonomous"
-# DATAVER = "Autonomous"
-VER = "Forced"
-DATAVER = "Forced"
+VER = "Autonomous"
+DATAVER = "Autonomous"
+# VER = "Forced"
+# DATAVER = "Forced"
 
 data = JLSO.load("DATA-$(Name)-$(DATAVER).bson")
 Parameters      = data[:Parameters]
@@ -103,37 +103,37 @@ Skew_Dimension    = size(Encoded_Phase, 1)
 
 
 ## re-create
-MTFP = Multi_Foliation_Problem(
-    Index_List,
-    Data_Decomp,
-    Encoded_Phase,
-    Selection = ([1; 2], [3; 4; 5; 6; 7; 8; 9]),
-    Model_Orders = (3, 1),
-    Encoder_Orders = (2, 3),
-    Unreduced_Model = Decomp.Unreduced_Model,
-    Reduced_Model = Decomp.Reduced_Model,
-    Reduced_Encoder = Decomp.Reduced_Encoder,
-    SH = SH,
-    Initial_Iterations = 32,
-    Scaling_Parameter = 2^(-10),
-    Initial_Scaling_Parameter = 2^(-4),
-    Scaling_Order = Linear_Scaling,
-    node_ratio = 1.0,
-    leaf_ratio = 1.0,
-    max_rank = 20,
-    Linear_Type = (Encoder_Mean_Stiefel, Encoder_Mean_Stiefel),
-    Nonlinear_Type = (Encoder_Compressed_Latent_Linear, Encoder_Compressed_Local),
-    Name = "MTF-$(Name)-$(VER)",
-    Time_Step = Time_Step,
-    Train_Model = false,
-)
-MTFP_Test = Multi_Foliation_Test_Problem(
-    MTFP,
-    Index_List_T,
-    Data_Decomp_T,
-    Encoded_Phase_T;
-    Initial_Scaling_Parameter = 2^(-2),
-)
+# MTFP = Multi_Foliation_Problem(
+#     Index_List,
+#     Data_Decomp,
+#     Encoded_Phase,
+#     Selection = ([1; 2], [3; 4; 5; 6; 7; 8; 9]),
+#     Model_Orders = (3, 1),
+#     Encoder_Orders = (2, 3),
+#     Unreduced_Model = Decomp.Unreduced_Model,
+#     Reduced_Model = Decomp.Reduced_Model,
+#     Reduced_Encoder = Decomp.Reduced_Encoder,
+#     SH = SH,
+#     Initial_Iterations = 32,
+#     Scaling_Parameter = 2^(-10),
+#     Initial_Scaling_Parameter = 2^(-4),
+#     Scaling_Order = Linear_Scaling,
+#     node_ratio = 1.0,
+#     leaf_ratio = 1.0,
+#     max_rank = 20,
+#     Linear_Type = (Encoder_Mean_Stiefel, Encoder_Mean_Stiefel),
+#     Nonlinear_Type = (Encoder_Compressed_Latent_Linear, Encoder_Compressed_Local),
+#     Name = "MTF-$(Name)-$(VER)",
+#     Time_Step = Time_Step,
+#     Train_Model = false,
+# )
+# MTFP_Test = Multi_Foliation_Test_Problem(
+#     MTFP,
+#     Index_List_T,
+#     Data_Decomp_T,
+#     Encoded_Phase_T;
+#     Initial_Scaling_Parameter = 2^(-2),
+# )
 
 Select = 3
 # Index = 1
@@ -146,9 +146,13 @@ Implicit_Radius_List = (1.0, 0.54, 1.2, 0.24)
 IC_Force = [0.1]
 
 dd = JLSO.load("MTF-$(Name)-$(VER).bson")
-MTF = MTFP.MTF # dd[:MTF]
+# dd[:MTF] = MTFP.MTF
+# dd[:Test_MTF] = MTFP_Test.MTF
+# JLSO.save("MTF-$(Name)-$(VER).bson", dd)
+
+MTF = dd[:MTF]
 XTF = dd[:XTF]
-MTF_Test = MTFP_Test.MTF # dd[:Test_MTF]
+MTF_Test = dd[:Test_MTF]
 XTF_Test = dd[:Test_XTF]
 Error_Trace = dd[:Train_Error_Trace]
 Test_Trace = dd[:Test_Error_Trace]
@@ -342,7 +346,7 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
     initial_maxiters = 200,
 )
 
-MTF_Cache, DATA_Backbone, DATA_Error_Curves = Data_Result(
+MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
     PPM,
     PPX,
     MIP,
@@ -370,7 +374,6 @@ MTF_Cache, Data_Max, TEST_Error_Curves = Data_Error(
     Data_Decomp_T,
     Encoded_Phase_T;
     Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
-    Color = Makie.wong_colors()[2],
     Model_IC = true,
 )
 
@@ -378,8 +381,8 @@ fig = Create_Plot()
 Plot_Backbone_Curves!(fig, ODE_Backbone, Data_Max; Label = "ODE", Color = Makie.wong_colors()[2])
 Plot_Backbone_Curves!(fig, MAP_Backbone, Data_Max; Label = "MAP", Color = Makie.wong_colors()[3])
 Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
-Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
-Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Label = "Data", Color = Makie.wong_colors()[2])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
 Plot_Error_Trace(fig, Index, Error_Trace, Test_Trace)
 Annotate_Plot!(fig)
 ###

@@ -160,6 +160,7 @@ MTFP = Multi_Foliation_Problem(
     Nonlinear_Type = (Encoder_Compressed_Latent_Linear, Encoder_Compressed_Local),
     Name = "MTF-$(Name)-$(VER)",
     Time_Step = Time_Step,
+    Train_Model = false,
 )
 # MTFP_Test = Multi_Foliation_Test_Problem(
 #     MTFP,

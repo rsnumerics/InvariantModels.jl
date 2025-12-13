@@ -38,7 +38,34 @@ Data_Decoder      = Decomp.Data_Decoder
 State_Dimension   = size(Data_Decomp, 1)
 Skew_Dimension    = size(Encoded_Phase, 1)
 
+# MTFP = Multi_Foliation_Problem(
+#     Index_List,
+#     Data_Decomp,
+#     Encoded_Phase,
+#     Selection = ([1; 2], [3; 4], [5; 6], [7; 8; 9; 10]),
+#     Model_Orders = (5, 11, 5, 2),
+#     Encoder_Orders = (5, 5, 5, 9),
+#     Unreduced_Model = Decomp.Unreduced_Model,
+#     Reduced_Model = Decomp.Reduced_Model,
+#     Reduced_Encoder = Decomp.Reduced_Encoder,
+#     SH = SH,
+#     Initial_Iterations = 16,
+#     Scaling_Parameter = 2^(-3),
+#     Initial_Scaling_Parameter = 2^(-2),
+#     Scaling_Order = Linear_Scaling,
+#     node_ratio = 0.9,
+#     leaf_ratio = 0.9,
+#     max_rank = 18,
+#     Linear_Type = (Encoder_Array_Stiefel, Encoder_Array_Stiefel, Encoder_Array_Stiefel, Encoder_Array_Stiefel),
+#     Nonlinear_Type = (Encoder_Compressed_Latent_Linear, Encoder_Compressed_Latent_Linear, Encoder_Compressed_Latent_Linear, Encoder_Compressed_Local),
+#     Name = "MTF-$(Name)-$(VER)",
+#     Time_Step = Time_Step,
+#     Train_Model = false,
+# )
 dd = JLSO.load("MTF-$(Name)-$(VER).bson")
+# dd[:MTF] = MTFP.MTF
+# JLSO.save("MTF-$(Name)-$(VER).bson", dd)
+
 MTF = dd[:MTF]
 XTF = dd[:XTF]
 Error_Trace = dd[:Train_Error_Trace]
