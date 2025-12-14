@@ -466,7 +466,7 @@ function Optimise!(
                 :Train_Error_Trace => Train_Error_Trace,
                 :Test_Loss_Trace => Test_Loss_Trace,
                 :Test_Error_Trace => Test_Error_Trace,
-                # format = :bson,
+                format = :bson,
                 compression = :gzip_fastest,
             )
         else
@@ -478,7 +478,7 @@ function Optimise!(
                 :Component_Trace => Component_Trace,
                 :Train_Loss_Trace => Train_Loss_Trace,
                 :Train_Error_Trace => Train_Error_Trace,
-                # format = :bson,
+                format = :bson,
                 compression = :gzip_fastest,
             )
         end
