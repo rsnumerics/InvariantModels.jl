@@ -117,13 +117,13 @@ function Multi_Foliation_Problem(
     # 1. Model 2. Model Shift 3. Encoder
     for k in eachindex(XTF.x)
         println("Setting up model $(k).")
-        if size(XTF.x[k].x[1].WW, 3) > 0
-            if size(XTF.x[k].x[1].WW, 2) == 1
-                XTF.x[k].x[1].WW[:, :, MTF[k][1].Linear_Indices] .=
+        if size(XTF.x[k].x[1].x[Part_WW], 3) > 0
+            if size(XTF.x[k].x[1].x[Part_WW], 2) == 1
+                XTF.x[k].x[1].x[Part_WW][:, :, MTF[k][1].Linear_Indices] .=
                     mean(Reduced_Model[Selection[k], :, Selection[k]], dims = 2)
                 MTF[k][1].SH .= 1
             else
-                XTF.x[k].x[1].WW[:, :, MTF[k][1].Linear_Indices] .=
+                XTF.x[k].x[1].x[Part_WW][:, :, MTF[k][1].Linear_Indices] .=
                     Unreduced_Model[Selection[k], :, Selection[k]]
                 MTF[k][1].SH .= SH
             end
@@ -194,7 +194,7 @@ function Multi_Foliation_Test_Problem(
     # zero the initial conditions
     for Index in 1:M
         for k in 1:(length(Index_List) - 1)
-            XTF.x[Index].x[1].IC[:, k] .= 0
+            XTF.x[Index].x[1].x[Part_IC][:, k] .= 0
         end
     end
     MTF_Cache = Make_Cache(
@@ -341,7 +341,7 @@ function Optimise!(
 
                 if Current_Component[1] == 1
                     # preserve initial condition
-                    Test_XTF.x[Index].x[1].WW .= XTF.x[Index].x[1].WW
+                    Test_XTF.x[Index].x[1].x[Part_WW] .= XTF.x[Index].x[1].x[Part_WW]
                 else
                     Get_Component(Test_XTF.x[Index], Current_Component) .=
                         Get_Component(XTF.x[Index], Current_Component)

@@ -143,11 +143,11 @@ function Make_Cache(
     if Model && Model_Order > 0
         # Linear = true means -> identify the full model, but only set the linear part
         From_Data!(Model_Part(MF), Model_Point(XF), Index_List, Latent_Data, Model_Phase, Scaling; Linear = true)
-        AA_Right = Transfer_Operator_Right(Model_Point(XF).WW[:, :, Model_Part(MF).Linear_Indices], Model_Part(MF).SH)
+        AA_Right = Transfer_Operator_Right(Model_Point(XF).x[Part_WW][:, :, Model_Part(MF).Linear_Indices], Model_Part(MF).SH)
         ev = eigvals(AA_Right)
         @show mx = maximum(abs.(ev))
         if mx > 1
-            Model_Point(XF).WW .*= (1 / mx)
+            Model_Point(XF).x[Part_WW] .*= (1 / mx)
         end
     elseif Shift
         SH = Find_Shift(Index_List, Latent_Data, Model_Phase)
@@ -176,7 +176,7 @@ function Make_Cache(
             )
         elseif Model_IC
             println("Optimising Initial Conditions!")
-            Model_Point(XF).IC .= Latent_Data[:, 1 .+ Index_List[1:(end - 1)]]
+            Model_Point(XF).x[Part_IC] .= Latent_Data[:, 1 .+ Index_List[1:(end - 1)]]
             Optimise_IC_Full!(
                 Model_Part(MF), Model_Point(XF), Index_List, Latent_Data,
                 Model_Phase, Scaling, Cache = Model_Cache, Iterations = Iterations
@@ -484,7 +484,7 @@ function Optimise!(
                 end
             end
             # print frequencies!
-            ev = First_Spectrum_Point(Point.WW[:, :, Manifold.Linear_Indices], Manifold.SH)
+            ev = First_Spectrum_Point(Point.x[Part_WW][:, :, Manifold.Linear_Indices], Manifold.SH)
             println(
                 "    Model=$(Index) | -> " *
                     @sprintf(

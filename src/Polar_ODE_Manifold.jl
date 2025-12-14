@@ -176,7 +176,7 @@ function Polar_ODE_Manifold(
     #
     RR .= DR0 .* Radial_Mesh * Radius
     TT .= T0
-    Latent_Dimension = size(X_Model.WW, 1)
+    Latent_Dimension = size(X_Model.x[Part_WW], 1)
     PM = Polar_ODE_Manifold{
         State_Dimension,
         Latent_Dimension,

@@ -365,7 +365,7 @@ function Make_Similar(
         M.D2val,
     )
     X_Copy = zero(M_Copy)
-    X_Copy.WW .= X.WW
+    X_Copy.x[Part_WW] .= X.x[Part_WW]
     return M_Copy, X_Copy
 end
 
@@ -384,8 +384,8 @@ function To_Non_Autonomous(
     )
     M_Copy.SH .= SH
     X_Copy = zero(M_Copy)
-    X_Copy.WW .= X.WW
-    X_Copy.IC .= X.IC
+    X_Copy.x[Part_WW] .= X.x[Part_WW]
+    X_Copy.x[Part_IC] .= X.x[Part_IC]
     return M_Copy, X_Copy
 end
 
@@ -397,10 +397,13 @@ function Slice(
     M_Slice = MultiStep_Model(State_Dimension, 1, Start_Order, End_Order, Trajectories)
     M_Slice.SH .= 1
     X_Slice = zero(M_Slice)
-    @tullio WW[i, k] := X.WW[i, j, k] * Encoded_Slice[j]
-    X_Slice.WW .= reshape(WW, size(X_Slice.WW)...)
+    @tullio WW[i, k] := X.x[Part_WW][i, j, k] * Encoded_Slice[j]
+    X_Slice.x[Part_WW] .= reshape(WW, size(X_Slice.x[Part_WW])...)
     return M_Slice, X_Slice
 end
+
+const Part_WW = 1
+const Part_IC = 2
 
 function Base.zero(
         M::MultiStep_Model{State_Dimension, Skew_Dimension, Start_Order, End_Order, Trajectories},
@@ -409,7 +412,7 @@ function Base.zero(
     Library_Dimension = length(M.Admissible)
     WW = zeros(State_Dimension, Skew_Dimension, Library_Dimension)
     IC = zeros(State_Dimension, Trajectories)
-    return ComponentVector(WW = WW, IC = IC)
+    return ArrayPartition(WW, IC)
 end
 
 function Least_Squares_DMD(Index_List, Data, Encoded_Phase, Scaling; Monomial_Exponents)
@@ -561,16 +564,16 @@ function From_Data!(
         Scaling;
         Monomial_Exponents = Monomial_Exponents,
     )
-    #     @show size(X.WW), size(BB)
+    #     @show size(X.x[Part_WW]), size(BB)
     if Linear
-        X.WW .= 0
-        @show size(BB), size(X.WW)
-        X.WW[:, :, M.Linear_Indices] .= BB[:, :, M.Linear_Indices]
+        X.x[Part_WW] .= 0
+        @show size(BB), size(X.x[Part_WW])
+        X.x[Part_WW][:, :, M.Linear_Indices] .= BB[:, :, M.Linear_Indices]
     else
-        X.WW .= BB
+        X.x[Part_WW] .= BB
     end
     for p in 1:(length(Index_List) - 1)
-        X.IC[:, p] = Data[:, 1 + Index_List[p]]
+        X.x[Part_IC][:, p] = Data[:, 1 + Index_List[p]]
     end
     M.SH .= SH
     return nothing
@@ -678,7 +681,7 @@ function Evaluate_Trajectory(M::MultiStep_Model, X, IC, Encoded_Phase)
     Evaluate_Trajectory!(
         Values,
         Monomials,
-        X.WW,
+        X.x[Part_WW],
         M.Monomial_Exponents,
         M.Admissible,
         IC,
@@ -703,13 +706,13 @@ function Evaluate!(
         @views Values_R = Values[:, (1 + Index_List[t]):Index_List[t + 1]]
         @views Monomials_R = Monomials[:, (1 + Index_List[t]):Index_List[t + 1]]
         @views Encoded_Phase_R = Encoded_Phase[:, (1 + Index_List[t]):Index_List[t + 1]]
-        IC_R = X.IC[:, t]
+        IC_R = X.x[Part_IC][:, t]
         #         @show size(Monomials_R), size(Monomials)
         #         print("EVT ")
         Evaluate_Trajectory!(
             Values_R,
             Monomials_R,
-            X.WW,
+            X.x[Part_WW],
             M.Monomial_Exponents,
             M.Admissible,
             IC_R,
@@ -740,7 +743,7 @@ function Evaluate_Function!(Value, M::MultiStep_Model, X, Data, Encoded_Phase)
     Library_Dimension = length(M.Admissible)
     Monomials = zeros(eltype(Data), Library_Dimension, size(Data, 2))
     Evaluate_Library!(Monomials, M.Monomial_Exponents[:, M.Admissible], Data)
-    X_Model = X.WW
+    X_Model = X.x[Part_WW]
     if size(X_Model, 2) == 1
         X_Model_V = view(X_Model, :, 1, :)
         @tullio Value[i, k] = X_Model_V[i, q] * Monomials[q, k]
@@ -771,7 +774,7 @@ end
 #                                     ) where {State_Dimension, Skew_Dimension, Start_Order, Trajectories}
 #     Jac = Cache.Jac
 #     Forward_Jac = Cache.Forward_Jac
-#     X_Model = view(X.WW, :, :, M.Linear_Indices)
+#     X_Model = view(X.x[Part_WW], :, :, M.Linear_Indices)
 #     @tullio Jac[i, j, k] = X_Model[i, p, j] * Encoded_Phase[p, k]
 #     Forward_Jac .= 0 # = zero(Jac)
 #     @inbounds for t in 1:length(Index_List) - 1
@@ -811,7 +814,7 @@ function Evaluate_Jacobian_Step_One!(
         end
         MultiStep_Jacobian_Helper!(
             Jac_R,
-            X.WW,
+            X.x[Part_WW],
             A_Monomials_R,
             Encoded_Phase_R,
             M.D1row,
@@ -834,21 +837,21 @@ function Evaluate_Jacobian_Step_One!(
     end
     if any(isnan.(Cache.Values))
         println("Evaluate_Jacobian_Step_One!: Not a number in Values.")
-        #         X.WW .= 0
-        X.IC .= 0
+        #         X.x[Part_WW] .= 0
+        X.x[Part_IC] .= 0
         Cache.Values .= 0
         Cache.Residual .= 0
     end
     if any(isnan.(A_Monomials))
         println("Evaluate_Jacobian_Step_One!: Not a number in Monomials.")
-        #         X.WW .= 0
-        X.IC .= 0
+        #         X.x[Part_WW] .= 0
+        X.x[Part_IC] .= 0
         A_Monomials .= 0
     end
     if any(isnan.(Jac))
         println("Evaluate_Jacobian_Step_One!: Not a number in Jacobian.")
-        #         X.WW .= 0
-        X.IC .= 0
+        #         X.x[Part_WW] .= 0
+        X.x[Part_IC] .= 0
         Jac .= 0
     end
     return nothing
@@ -893,14 +896,14 @@ function Gradient_Hessian_New!(
     Forward_Jac = Cache.Forward_Jac
     GG .= 0
     HH .= 0
-    S1 = prod(size(X.WW))
+    S1 = prod(size(X.x[Part_WW]))
     S2 = size(Forward_Jac, 3)
-    GG1 = reshape(view(GG, 1:S1), size(X.WW)...)
-    HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
-    BB_Jac_C = Cache.BB_Jac #zeros(eltype(Data), State_Dimension, size(X.WW)..., 2)
+    GG1 = reshape(view(GG, 1:S1), size(X.x[Part_WW])...)
+    HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.x[Part_WW])..., size(X.x[Part_WW])...)
+    BB_Jac_C = Cache.BB_Jac #zeros(eltype(Data), State_Dimension, size(X.x[Part_WW])..., 2)
     @inbounds for t in 1:(length(Index_List) - 1)
         C_range = (S1 + 1 + (t - 1) * S2):(S1 + t * S2)
-        HH12 = reshape(view(HH, C_range, 1:S1), :, size(X.WW)...)
+        HH12 = reshape(view(HH, C_range, 1:S1), :, size(X.x[Part_WW])...)
         HH22 = view(HH, C_range, C_range)
         GG2 = view(GG, C_range)
         BB_Jac_C .= 0
@@ -967,9 +970,9 @@ function Optimise!(
     #     JJ = ForwardDiff.jacobian(x -> Evaluate(M, x, Index_List, Data, Encoded_Phase), X)
     #     JJS = reshape(JJ, size(Data)..., :)
     #     @tullio HH_New[i, j] := JJS[p, k, i] * JJS[p, k, j] * Scaling[k]
-    #     S1 = prod(size(X.WW))
-    #     HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
-    #     HH11_New = reshape(view(HH_New, 1:S1, 1:S1), size(X.WW)..., size(X.WW)...)
+    #     S1 = prod(size(X.x[Part_WW]))
+    #     HH11 = reshape(view(HH, 1:S1, 1:S1), size(X.x[Part_WW])..., size(X.x[Part_WW])...)
+    #     HH11_New = reshape(view(HH_New, 1:S1, 1:S1), size(X.x[Part_WW])..., size(X.x[Part_WW])...)
     #     HH12 = view(HH, S1+1:size(HH, 1), 1:S1)
     #     HH12_New = view(HH_New, S1+1:size(HH_New, 1), 1:S1)
     #     HH22 = view(HH, S1+1:size(HH, 1), S1+1:size(HH, 2))
@@ -1031,7 +1034,7 @@ function Gradient_Hessian_IC!(
     BB_RS = Cache.Forward_Jac
     if any(isnan.(BB_RS))
         println("Gradient_Hessian_IC!: Not a number in Jacobian.")
-        X.IC .= 0
+        X.x[Part_IC] .= 0
         Evaluate_Jacobian_Step_One!(Cache, M, X, Index_List, Data, Encoded_Phase, Scaling)
     end
     Residual = Cache.Residual
@@ -1097,7 +1100,7 @@ function Optimise_IC!(
             if any(isnan.(Delta))
                 return Beta, LL, norm(GG)
             end
-            XC.IC[:, k] .= X.IC[:, k] .- Delta
+            XC.x[Part_IC][:, k] .= X.x[Part_IC][:, k] .- Delta
         end
         Evaluate!(Cache.Values, Cache.Monomials, M, XC, Index_List, Data, Encoded_Phase)
         Cache.Residual .= Cache.Values .- Data
@@ -1105,13 +1108,13 @@ function Optimise_IC!(
         #         @show LL2
         #         println("Beta = ", Beta, " Loss = ", LL2, " Starting Loss = ", LL)
         if LL2 < 0.875 * LL
-            X.IC .= XC.IC
+            X.x[Part_IC] .= XC.x[Part_IC]
             return Beta / 2, LL2, norm(GG)
         elseif LL2 <= LL + eps(LL)
-            X.IC .= XC.IC
+            X.x[Part_IC] .= XC.x[Part_IC]
             return Beta / sqrt(2.0), LL2, norm(GG)
         elseif LL2 < 1.125 * LL
-            #             X.IC .= XC.IC
+            #             X.x[Part_IC] .= XC.x[Part_IC]
             Beta = Beta * sqrt(2.0)
             #             return Beta * sqrt(2.0), LL2, norm(GG)
         elseif Beta < Maximum_Radius
@@ -1121,7 +1124,7 @@ function Optimise_IC!(
         end
     end
     #
-    X.IC .= XC.IC
+    X.x[Part_IC] .= XC.x[Part_IC]
     return Beta, LL, norm(GG)
 end
 
@@ -1150,14 +1153,14 @@ function Optimise_IC_Full!(
     if All_At_Once
         Index_Ranges = [(1, length(Index_List) - 1)]
     else
-        Index_Ranges = [(IC_Id, IC_Id) for IC_Id in axes(X_Full.IC, 2)]
+        Index_Ranges = [(IC_Id, IC_Id) for IC_Id in axes(X_Full.x[Part_IC], 2)]
     end
     Trust_Radius = zeros(eltype(Radius), length(Index_Ranges))
     for (IC_Id, (Start, Stop)) in enumerate(Index_Ranges)
         t0 = time()
         Trust_Radius[IC_Id] = Radius
         M, X = Make_Similar(M_Full, X_Full, 1 + Stop - Start)
-        X.IC[:, 1:(1 + Stop - Start)] .= X_Full.IC[:, Start:Stop]
+        X.x[Part_IC][:, 1:(1 + Stop - Start)] .= X_Full.x[Part_IC][:, Start:Stop]
         Index_List_R = Index_List[Start:(Stop + 1)] .- Index_List[Start]
         Data_R = view(Data, :, (1 + Index_List[Start]):Index_List[Stop + 1])
         Encoded_Phase_R = view(Encoded_Phase, :, (1 + Index_List[Start]):Index_List[Stop + 1])
@@ -1208,10 +1211,10 @@ function Optimise_IC_Full!(
             end
         end
         println("M=", Model_Index, ". ", IC_Id, ". [", 1 + Index_List[Start], "-", Index_List[Stop + 1], "]", txt)
-        if any(isnan.(X.IC))
+        if any(isnan.(X.x[Part_IC]))
             println("*** NaN in IC ***")
         end
-        X_Full.IC[:, Start:Stop] .= X.IC[:, 1:(1 + Stop - Start)]
+        X_Full.x[Part_IC][:, Start:Stop] .= X.x[Part_IC][:, 1:(1 + Stop - Start)]
     end
     return maximum(Trust_Radius)
 end
@@ -1266,7 +1269,7 @@ function Make_Cache(
         Hessian = []
         Gradient = []
     else
-        BB_Jac = zeros(eltype(Data), State_Dimension, size(X.WW)..., 2) # [] # Big_Jac ? zeros(eltype(X), size(Data)..., size(X.WW)...) : []
+        BB_Jac = zeros(eltype(Data), State_Dimension, size(X.x[Part_WW])..., 2) # [] # Big_Jac ? zeros(eltype(X), size(Data)..., size(X.x[Part_WW])...) : []
         @show size(BB_Jac)
         Hessian = zeros(eltype(X), length(X), length(X)) # HH
         Gradient = zeros(eltype(X), length(X))
@@ -1466,7 +1469,7 @@ function Pointwise_Hessian!(
 end
 
 function Decompose(M::MultiStep_Model, Jacobian, Select)
-    #     Jacobian = view(X.WW, :,:,M.Linear_Indices)
+    #     Jacobian = view(X.x[Part_WW], :,:,M.Linear_Indices)
     SH = M.SH
     if size(Jacobian, 1) > 2
         Vt, W, Lambda, Vt_C, W_C, Lambda_C =
@@ -1501,7 +1504,7 @@ function Find_Tangent(M::MultiStep_Model, Jacobian, Select, Beta_Grid)
     DR0 = abs(Lambda[1])
     @tullio DW[i, j, k] := Wr[i, j] * cos(Beta_Grid[k]) + Wi[i, j] * sin(Beta_Grid[k])
     # check if this is really invariant
-    #     Jacobian = view(X.WW, :,:,M.Linear_Indices)
+    #     Jacobian = view(X.x[Part_WW], :,:,M.Linear_Indices)
     #     # F( W(r, beta, theta)) -> r = 1
     #     @tullio F_W[i, j, k] := Jacobian[i, j, p] * DW[p, j, k]  # j -> theta, k -> beta
     #     @tullio SH_beta[q, k] := psi(Beta_Grid[q] + T0 - Beta_Grid[k], length(Beta_Grid))
@@ -1544,12 +1547,12 @@ function Jacobian_Function!(Jac, M::MultiStep_Model, X, Data, Encoded_Phase)
     Monomials = zeros(eltype(Data), size(M.Monomial_Exponents, 2), size(Data, 2))
     Evaluate_Library!(Monomials, M.Monomial_Exponents, Data)
     Jac .= 0
-    if size(X.WW, 2) == 1
-        Jacobian_Function_Helper_Auto!(Jac, X.WW, Monomials, M.D1row, M.D1val, M.D1col)
+    if size(X.x[Part_WW], 2) == 1
+        Jacobian_Function_Helper_Auto!(Jac, X.x[Part_WW], Monomials, M.D1row, M.D1val, M.D1col)
     else
         Jacobian_Function_Helper!(
             Jac,
-            X.WW,
+            X.x[Part_WW],
             Monomials,
             Encoded_Phase,
             M.D1row,
@@ -1600,7 +1603,7 @@ function Model_From_Function(
     M_Model = MultiStep_Model(State_Dimension, Skew_Dimension, Start_Order, End_Order, 1)
     Monomial_Exponents = M_Model.Monomial_Exponents[:, M_Model.Admissible]
     XX = zero(M_Model)
-    X_Model = XX.WW
+    X_Model = XX.x[Part_WW]
     u0 = set_variables("x", numvars = State_Dimension, order = End_Order)
     grid = Fourier_Grid(Skew_Dimension)
     M_Model.SH .= Shift_Operator(grid, omega)
@@ -1651,7 +1654,7 @@ function Model_From_Function_Alpha(
     M_Model = MultiStep_Model(State_Dimension, Skew_Dimension, Start_Order, End_Order, 1)
     Monomial_Exponents = M_Model.Monomial_Exponents[:, M_Model.Admissible]
     XX = zero(M_Model)
-    X_Model = XX.WW
+    X_Model = XX.x[Part_WW]
     u0 = set_variables("x", numvars = State_Dimension, order = End_Order)
     Alpha = zeros(eltype(Generator), Skew_Dimension)
     M_Model.SH .= Generator
@@ -1986,7 +1989,7 @@ function Model_From_ODE(
     M_Model = MultiStep_Model(State_Dimension, Skew_Dimension, Start_Order, End_Order, 1)
     Monomial_Exponents = M_Model.Monomial_Exponents[:, M_Model.Admissible]
     XX = zero(M_Model)
-    X_Model = XX.WW
+    X_Model = XX.x[Part_WW]
     u0 = set_variables("x", numvars = State_Dimension, order = End_Order)
     grid = Fourier_Grid(Skew_Dimension)
     M_Model.SH .= SH

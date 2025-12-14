@@ -622,7 +622,7 @@ function Polar_Manifold(
 ) where {M,State_Dimension,Skew_Dimension}
     Radial_Mesh = Chebyshev_Mesh(Radial_Order, Radial_Intervals)
     Radial_Dimension = length(Radial_Mesh)
-    if size(XTF.x[Index].x[1].WW, 2) == 1
+    if size(XTF.x[Index].x[1].x[Part_WW], 2) == 1
         println("Making it Non Autonomous")
         M_Model, X_Model =
             To_Non_Autonomous(MTF[Index][1], XTF.x[Index].x[1], SH, Skew_Dimension)
@@ -666,7 +666,7 @@ function Polar_Manifold(
     #     @show norm(WW[:, 2, :, :] )
     RR .= DR .* Radial_Mesh
     TT .= T0
-    Latent_Dimension = size(X_Model.WW, 1)
+    Latent_Dimension = size(X_Model.x[Part_WW], 1)
     PP = Polar_Manifold{
         State_Dimension,
         Latent_Dimension,
@@ -967,7 +967,7 @@ function Curves(
 end
 
 function To_Latent(MTF::Multi_Foliation, XTF, Index, Data, Encoded_Phase)
-    Latent_Data = zeros(eltype(Data), size(XTF.x[Index].x[1].WW, 1), size(Data, 2))
+    Latent_Data = zeros(eltype(Data), size(XTF.x[Index].x[1].x[Part_WW], 1), size(Data, 2))
     Evaluate!(Latent_Data, MTF[Index][2], XTF.x[Index].x[2], Data, Encoded_Phase)
     return Latent_Data
 end
@@ -1119,7 +1119,7 @@ function Data_Error(
     Skew_Dimension,
 }
     if Model_IC
-        IC = XTF.x[Index].x[1].IC
+        IC = XTF.x[Index].x[1].x[Part_IC]
         IC .*= (1 .+ 0.2 * norm(IC) * (rand(size(IC)...) .- 0.5))
     end
     MTF_Cache = Make_Cache(

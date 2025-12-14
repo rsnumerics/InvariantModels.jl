@@ -525,7 +525,7 @@ function Find_Tangent(
     # Latent_Tangent indices : 1 - dim, 2 - theta, 3 - beta
     #     Latent_Tangent, DR0, T0 = Find_Tangent(MTF[1][1], XTF.x[1].x[1], SH, Beta_Grid)
     #     _, Jac = Find_Torus(M_Model, X_Model, SH)
-    Jac = view(X_Model.WW, :, :, M_Model.Linear_Indices)
+    Jac = view(X_Model.x[Part_WW], :, :, M_Model.Linear_Indices)
     Local_Latent = size(Jac, 1)
     #     @assert Local_Latent == 2 "Not a two-dimensional system"
     #     @show size(Jac)
@@ -610,7 +610,7 @@ end
 #         Test_Index_List = Test_Data[1]
 #         for Index in 1:M
 #             for k in 1:length(Test_Index_List)-1 # Index_List
-#                 Test_XTF.x[Index].x[1].IC[:, k] .= 0 # Test_Cache.Parts[Index].Latent_Data[:, Test_Index_List[k]+1]
+#                 Test_XTF.x[Index].x[1].x[Part_IC][:, k] .= 0 # Test_Cache.Parts[Index].Latent_Data[:, Test_Index_List[k]+1]
 #             end
 #         end
 #     end
@@ -641,7 +641,7 @@ end
 #             if !isempty(Test_Data)
 #                 if Component_Trace[Index, Step][1] == 1
 #                     # preserve initial condition
-#                     Test_XTF.x[Index].x[1].WW .= XTF.x[Index].x[1].WW
+#                     Test_XTF.x[Index].x[1].x[Part_WW] .= XTF.x[Index].x[1].x[Part_WW]
 #                 else
 #                     Get_Component(Test_XTF.x[Index], Component_Trace[Index, Step]) .= Get_Component(XTF.x[Index], Component_Trace[Index, Step])
 #                 end
