@@ -74,10 +74,10 @@ function Car_Follow_Forcing_Matrix!(x, Parameters, t)
 end
 
 Name = "Car_Follow"
-# VER = "Autonomous"
-# DATAVER = "Autonomous"
-VER = "Forced"
-DATAVER = "Forced"
+VER = "Autonomous"
+DATAVER = "Autonomous"
+# VER = "Forced"
+# DATAVER = "Forced"
 
 data = JLSO.load("DATA-$(Name)-$(DATAVER).bson")
 Parameters      = data[:Parameters]
@@ -102,17 +102,54 @@ State_Dimension   = size(Data_Decomp, 1)
 Skew_Dimension    = size(Encoded_Phase, 1)
 
 
+## re-create
+# MTFP = Multi_Foliation_Problem(
+#     Index_List,
+#     Data_Decomp,
+#     Encoded_Phase,
+#     Selection = ([1; 2], [3; 4; 5; 6; 7; 8; 9]),
+#     Model_Orders = (3, 1),
+#     Encoder_Orders = (2, 3),
+#     Unreduced_Model = Decomp.Unreduced_Model,
+#     Reduced_Model = Decomp.Reduced_Model,
+#     Reduced_Encoder = Decomp.Reduced_Encoder,
+#     SH = SH,
+#     Initial_Iterations = 32,
+#     Scaling_Parameter = 2^(-10),
+#     Initial_Scaling_Parameter = 2^(-4),
+#     Scaling_Order = Linear_Scaling,
+#     node_ratio = 1.0,
+#     leaf_ratio = 1.0,
+#     max_rank = 20,
+#     Linear_Type = (Encoder_Mean_Stiefel, Encoder_Mean_Stiefel),
+#     Nonlinear_Type = (Encoder_Compressed_Latent_Linear, Encoder_Compressed_Local),
+#     Name = "MTF-$(Name)-$(VER)",
+#     Time_Step = Time_Step,
+#     Train_Model = false,
+# )
+# MTFP_Test = Multi_Foliation_Test_Problem(
+#     MTFP,
+#     Index_List_T,
+#     Data_Decomp_T,
+#     Encoded_Phase_T;
+#     Initial_Scaling_Parameter = 2^(-2),
+# )
+
 Select = 3
-Index = 1
+# Index = 1
 ODE_Select_List = ([1; 2], [1; 2], [1; 2], [1; 2])
 MAP_Select_List = ([1; 2], [1; 2], [1; 2], [1; 2])
-Model_Radius_List = (0.4, 0.2, 0.4, 0.2)
-Data_Radius_List = (0.4, 0.54, 0.2, 0.24)
-Implicit_Radius_List = (1.0, 0.54, 0.6, 0.24)
+Model_Radius_List = (0.4, 0.2, 0.3, 0.2)
+Data_Radius_List = (0.4, 0.54, 0.3, 0.24)
+Implicit_Radius_List = (1.0, 0.54, 1.2, 0.24)
 
 IC_Force = [0.1]
 
 dd = JLSO.load("MTF-$(Name)-$(VER).bson")
+# dd[:MTF] = MTFP.MTF
+# dd[:Test_MTF] = MTFP_Test.MTF
+# JLSO.save("MTF-$(Name)-$(VER).bson", dd)
+
 MTF = dd[:MTF]
 XTF = dd[:XTF]
 MTF_Test = dd[:Test_MTF]
@@ -120,12 +157,13 @@ XTF_Test = dd[:Test_XTF]
 Error_Trace = dd[:Train_Error_Trace]
 Test_Trace = dd[:Test_Error_Trace]
 
-# MTF_Test, XTF_Test = Make_Similar(MTF, XTF, length(Index_List_T) - 1)
-# MTF = Re_Target(MTF_Old, (Not_Condensed, Condensed_Linear_Fixed))
-# MTF = MTF_Old
-fig = Create_Plot()
-
 Model_Results = true
+
+fig1_List = []
+fig2_List = []
+fig3_List = []
+
+for Index in 1:1
 
 if Model_Results
     Radius = Model_Radius_List[Select]
@@ -185,7 +223,7 @@ if Model_Results
         )
     end
 
-    Plot_Model_Result!(fig, MP, XP, Hz = false)
+    ODE_Backbone = Model_Result(MP, XP, Hz = false)
 
     if #=false=# isfile("MAPMODEL-$(Name)-$(VER).bson")
         dd = JLSO.load("MAPMODEL-$(Name)-$(VER).bson")
@@ -245,15 +283,13 @@ if Model_Results
         )
     end
 
-    Plot_Model_Result!(
-        fig,
+    MAP_Backbone = Model_Result(
         PM,
         PX,
         Time_Step = Time_Step,
         Hz = false,
         Damping_By_Derivative = true,
     )
-    display(fig)
 end
 
 Radius = Data_Radius_List[Select]
@@ -296,8 +332,8 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
     MTF,
     XTF,
     Index,
-    Data_Decomp,
-    Encoded_Phase;
+    Data_Decomp_T,
+    Encoded_Phase_T;
     Radial_Order = Cheb_Order,
     Radial_Intervals = Cheb_Intervals,
     Radius = Radius,
@@ -310,12 +346,7 @@ MIP, XIP, Torus, E_WW_Full, Latent_Data, E_ENC, AA, Valid_Ind = Extract_Manifold
     initial_maxiters = 200,
 )
 
-# Latent_Data = To_Latent(MTF, XTF, Index, Data_Decomp, Encoded_Phase)
-# E_WW, E_TT, Valid = Latent_To_Manifold(PPM, PPX, MTF, XTF, Index, Latent_Data, Encoded_Phase; Transformation=Data_Decoder ./ reshape(Data_Scale,1,1,:))
-
-# fig = Create_Plot()
-MTF_Cache = Plot_Data_Result!(
-    fig,
+MTF_Cache, DATA_Backbone, DATA_Error_Curves, Data_Max = Data_Result(
     PPM,
     PPX,
     MIP,
@@ -331,8 +362,7 @@ MTF_Cache = Plot_Data_Result!(
     Hz = false,
     Damping_By_Derivative = true,
 )
-MTF_Cache, Data_Max = Plot_Data_Error!(
-    fig,
+MTF_Cache, Data_Max, TEST_Error_Curves = Data_Error(
     PPM,
     PPX,
     MIP,
@@ -344,24 +374,23 @@ MTF_Cache, Data_Max = Plot_Data_Error!(
     Data_Decomp_T,
     Encoded_Phase_T;
     Transformation = Data_Decoder ./ reshape(Data_Scale, 1, 1, :),
-    Color = Makie.wong_colors()[2],
     Model_IC = true,
 )
+
+fig = Create_Plot()
+Plot_Backbone_Curves!(fig, ODE_Backbone, Data_Max; Label = "ODE", Color = Makie.wong_colors()[2])
+Plot_Backbone_Curves!(fig, MAP_Backbone, Data_Max; Label = "MAP", Color = Makie.wong_colors()[3])
+Plot_Backbone_Curves!(fig, DATA_Backbone, Data_Max; Label = "Data", Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, DATA_Error_Curves, Data_Max; Color = Makie.wong_colors()[1])
+Plot_Error_Curves!(fig, TEST_Error_Curves, Data_Max; Color = Makie.wong_colors()[2])
 Plot_Error_Trace(fig, Index, Error_Trace, Test_Trace)
-
-
 Annotate_Plot!(fig)
-# axFreq = content(fig[1, 4])
-# axDamp = content(fig[1, 5])
-# xlims!(axFreq, 1.0, 1.03)
-# xlims!(axDamp, 0.0245, 0.0255)
-# ylims!(axFreq, 0, 0.5)
-# ylims!(axDamp, 0, 0.5)
-
+###
 
 CairoMakie.activate!(type = "svg")
 save("FIGURE-$(Name)-$(VER)-I$(Index).svg", fig)
 GLMakie.activate!()
+push!(fig1_List, fig)
 
 fig2 = Figure()
 # Latent data
@@ -400,68 +429,85 @@ let it = 0
         end
     end
 end
-# Model data
-#     let it = 0
-#         let k = Index
-#             for l in 1:size(MTF_Cache.Parts[k].Latent_Data, 1)
-#                 ax = content(fig2[1+div(it,Rows),1+mod(it,Rows)])
-#                 lines!(ax, X_Axis, MTF_Cache.Parts[k].Model_Cache.Values[l,:], color=Makie.wong_colors()[2])
-#                 it += 1
-#             end
-#         end
-#     end
+
 display(fig2)
 CairoMakie.activate!(type = "svg")
+save("FIGURE-LATENT-$(Name)-$(VER)-I$(Index).svg", fig2)
+GLMakie.activate!()
+push!(fig2_List, fig2)
+
+fig3 = Figure()
+
+# data = JLSO.load("RAWDATA-$(Name)-$(RAWDATAVER).bson")
+# List_of_Data        = data[:List_of_Data_T]
+# List_of_Phases      = data[:List_of_Phases_T]
+#
+# E_WW_Latent_SS, E_TT, Valid = Latent_To_Manifold(PPM, PPX, MTF, XTF, Index, MTF_Cache.Parts[Index].Model_Cache.Values, Encoded_Phase; Transformation=Data_Decoder ./ reshape(Data_Scale,1,1,:))
+# E_WW_Latent = E_WW_Latent_SS + Steady_State * Encoded_Phase
+Repr_Dims = 1:State_Dimension
+Select_Test = 1
+E_WW_Latent = E_WW_Full[Repr_Dims, :]
+E_WW_Latent += Steady_State[Repr_Dims, :] * Encoded_Phase_T
+Full_Decoder = Data_Decoder[Repr_Dims, :, :] ./ reshape(Data_Scale, 1, 1, :)
+@tullio Data_Raw[j, k] := Full_Decoder[j, p, q] * Data_Decomp_T[q, k] * Encoded_Phase_T[p, k]
+Data_Raw += Steady_State[Repr_Dims, :] * Encoded_Phase_T
+
+X_Axis = range(0, step = ct.Time_Step, length = size(Data_Raw, 2))
+X_Axis_Model = range(0, step = ct.Time_Step, length = size(E_WW_Latent, 2))
+#
+Invalid = findall(.!Valid_Ind)
+#
+Rows = round(Int, sqrt(size(E_WW_Latent, 1)))
+let it = 0
+    for k = 1:size(E_WW_Latent, 1)
+        ax = Makie.Axis(
+            fig3[1+div(it, Rows), 1+mod(it, Rows)],
+            xlabel = L"$t$ [s]",
+            ylabel = L"z_{%$k}",
+        )
+        lines!(ax, X_Axis, Data_Raw[k, :], color = Makie.wong_colors()[1])
+        it += 1
+    end
+end
+#
+let it = 0
+    for k = 1:size(E_WW_Latent, 1)
+        ax = content(fig3[1+div(it, Rows), 1+mod(it, Rows)])
+        lines!(ax, X_Axis_Model, E_WW_Latent[k, :], color = Makie.wong_colors()[2])
+        scatter!(
+            ax,
+            X_Axis_Model[Invalid],
+            E_WW_Latent[k, Invalid],
+            color = Makie.wong_colors()[3],
+        )
+        it += 1
+    end
+end
+CairoMakie.activate!(type = "svg")
 save(
-    "FIGURE-LATENT-$(Name)-$(VER)-I$(Index).svg",
-    fig2,
+    "FIGURE-MANIF-$(Name)-$(VER)-I$(Index).svg",
+    fig3,
 )
 GLMakie.activate!()
+push!(fig3_List, fig3)
+JLSO.save(
+    "CURVES-$(Name)-$(VER)-I$(Index).bson",
+    :ODE_Backbone => ODE_Backbone,
+    :MAP_Backbone => MAP_Backbone,
+    :DATA_Backbone => DATA_Backbone,
+    :DATA_Error_Curves => DATA_Error_Curves,
+    :TEST_Error_Curves => TEST_Error_Curves,
+    :Error_Trace => Error_Trace,
+    :Test_Trace => Test_Trace,
+    :Data_Raw => Data_Raw,
+    :Data_Reconstructed => E_WW_Latent,
+    :Valid_Id => Valid_Ind,
+    :Invalid_Id => Invalid,
+    :Latent_Model => MTF_Cache.Parts[Index].Model_Cache.Values,
+    :Latent_Data => MTF_Cache.Parts[Index].Latent_Data,
+    :Index_List => Index_List_T,
+    :Time_Step => Time_Step,
+)
+end # Index in 1:1
 
-# fig3 = Figure()
-#
-# data = JLSO.load("RAWDATA-$(Name)-$(DATAVER).bson")
-# List_of_Data        = data[:List_of_Data]
-# List_of_Phases      = data[:List_of_Phases]
-# #
-# # E_WW_Latent_SS, E_TT, Valid = Latent_To_Manifold(PPM, PPX, MTF, XTF, Index, MTF_Cache.Parts[Index].Model_Cache.Values, Encoded_Phase; Transformation=Data_Decoder ./ reshape(Data_Scale,1,1,:))
-# # E_WW_Latent = E_WW_Latent_SS + Steady_State * Encoded_Phase
-# E_WW_Latent = E_WW_Full
-# Data_Raw = List_of_Data[1] - Steady_State * List_of_Phases[1]
-# X_Axis = range(0, step = ct.Time_Step, length = size(Data_Raw, 2))
-# #
-# Invalid = findall(.!Valid_Ind)
-# #
-# Rows = round(Int, sqrt(State_Dimension))
-# let it = 0
-#     for k = 1:size(E_WW_Latent, 1)
-#         ax = Makie.Axis(
-#             fig3[1+div(it, Rows), 1+mod(it, Rows)],
-#             xlabel = L"$t$ [s]",
-#             ylabel = L"z_{%$k}",
-#         )
-#         lines!(ax, X_Axis, Data_Raw[k, :], color = Makie.wong_colors()[1])
-#         it += 1
-#     end
-# end
-# #
-# let it = 0
-#     for k = 1:size(E_WW_Latent, 1)
-#         ax = content(fig3[1+div(it, Rows), 1+mod(it, Rows)])
-#         lines!(ax, X_Axis, E_WW_Latent[k, :], color = Makie.wong_colors()[2])
-#         scatter!(
-#             ax,
-#             X_Axis[Invalid],
-#             E_WW_Latent[k, Invalid],
-#             color = Makie.wong_colors()[3],
-#         )
-#         it += 1
-#     end
-# end
-# CairoMakie.activate!(type = "svg")
-# save(
-#     "FIGURE-MANIF-$(Name)-$(VER)-I$(Index).svg",
-#     fig3,
-# )
-# GLMakie.activate!()
 end

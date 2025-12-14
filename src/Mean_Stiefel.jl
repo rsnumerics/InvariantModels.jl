@@ -1,4 +1,4 @@
-# make it into: 1st element Stiefel 2nd -- last : Mean_Flat_Stiefel
+# SPDX-License-Identifier: EUPL-1.2
 
 struct Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽} <: AbstractManifold{𝔽}
 end
@@ -7,13 +7,19 @@ function Mean_Flat_Stiefel(Rows::Int, Columns::Int, Skew_Dimension::Int; field::
     return Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}()
 end
 
-function ManifoldsBase.manifold_dimension(M::Mean_Flat_Stiefel{
-        Rows, Columns, Skew_Dimension, ℝ}) where {Rows, Columns, Skew_Dimension}
+function ManifoldsBase.manifold_dimension(
+        M::Mean_Flat_Stiefel{
+            Rows, Columns, Skew_Dimension, ℝ,
+        }
+    ) where {Rows, Columns, Skew_Dimension}
     return Columns * Skew_Dimension * Rows - div(Rows * (Rows + 1), 2)
 end
 
-function ManifoldsBase.manifold_dimension(M::Mean_Flat_Stiefel{
-        Rows, Columns, Skew_Dimension, ℂ}) where {Rows, Columns, Skew_Dimension}
+function ManifoldsBase.manifold_dimension(
+        M::Mean_Flat_Stiefel{
+            Rows, Columns, Skew_Dimension, ℂ,
+        }
+    ) where {Rows, Columns, Skew_Dimension}
     return 2 * Columns * Skew_Dimension * Rows - Rows * Rows
 end
 
@@ -24,26 +30,34 @@ end
 @inline ManifoldsBase.default_retraction_method(::Mean_Flat_Stiefel) = PolarRetraction()
 @inline ManifoldsBase.default_inverse_retraction_method(::Mean_Flat_Stiefel) = PolarInverseRetraction()
 
-function ManifoldsBase.representation_size(M::Mean_Flat_Stiefel{
-        Rows, Columns, Skew_Dimension, 𝔽}) where {Rows, Columns, Skew_Dimension, 𝔽}
+function ManifoldsBase.representation_size(
+        M::Mean_Flat_Stiefel{
+            Rows, Columns, Skew_Dimension, 𝔽,
+        }
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     #     println("representation_size")
     return (Rows, Columns, Skew_Dimension)
 end
 
-function Base.zero(M::Mean_Flat_Stiefel{
-        Rows, Columns, Skew_Dimension, field}) where {Rows, Columns, Skew_Dimension, field}
+function Base.zero(
+        M::Mean_Flat_Stiefel{
+            Rows, Columns, Skew_Dimension, field,
+        }
+    ) where {Rows, Columns, Skew_Dimension, field}
     return zeros(Rows, Columns, Skew_Dimension)
 end
 
 function ManifoldsBase.zero_vector!(
-        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, X, p) where {Rows, Columns, Skew_Dimension, field}
+        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, X, p
+    ) where {Rows, Columns, Skew_Dimension, field}
     X .= 0
     return X
 end
 
 # CORRECT
 function Manifolds.project!(
-        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, q, p) where {Rows, Columns, Skew_Dimension, field}
+        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, q, p
+    ) where {Rows, Columns, Skew_Dimension, field}
     p_R = reshape(p, size(p, 1), :)
     q_R = reshape(q, size(q, 1), :)
     #
@@ -58,7 +72,8 @@ end
 
 # CORRECT
 function Manifolds.project!(
-        ::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, Y, p, X) where {Rows, Columns, Skew_Dimension, field}
+        ::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, field}, Y, p, X
+    ) where {Rows, Columns, Skew_Dimension, field}
     p_R = reshape(p, size(p, 1), :)
     X_R = reshape(X, size(X, 1), :)
     Y_R = reshape(Y, size(Y, 1), :)
@@ -77,8 +92,10 @@ function ManifoldsBase.retract_polar!(M::Mean_Flat_Stiefel, q, p, X)
     return ManifoldsBase.retract_polar_fused!(M, q, p, X, one(eltype(p)))
 end
 # CORRECT
-function ManifoldsBase.retract_polar_fused!(::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, q,
-        p, X, t::Number) where {Rows, Columns, Skew_Dimension, 𝔽}
+function ManifoldsBase.retract_polar_fused!(
+        ::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, q,
+        p, X, t::Number
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     #     println("retract_polar_fused!")
     #     if any(isnan.(q))
     #         println("q NaN Encountered")
@@ -146,7 +163,8 @@ end
 # end
 
 function Make_Cache(
-        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+        M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show size(X), size(Phase)
@@ -155,8 +173,10 @@ function Make_Cache(
     return (Result_Matrix, Result_Value)
 end
 
-function Update_Cache!(Cache, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽},
-        X, Data...) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Update_Cache!(
+        Cache, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽},
+        X, Data...
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     Result_Matrix, Result_Value = Cache
@@ -165,20 +185,26 @@ function Update_Cache!(Cache, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension
     return nothing
 end
 
-function Evaluate!(Result, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Evaluate!(
+        Result, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Result .= Cache[2]
     return nothing
 end
 
-function Evaluate_Add!(Result, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Evaluate_Add!(
+        Result, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Result .+= Cache[2]
     return nothing
 end
 
-function L0_DF!(DF, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data::Vararg{AbstractMatrix{T}};
-        L0, Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+function L0_DF!(
+        DF, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data::Vararg{AbstractMatrix{T}};
+        L0, Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -199,8 +225,10 @@ end
 # end
 
 # CALCULATE HH[p1, i1, q1, p2, i2, q2] = L0[i1, i2, k] * Data_State[p1, k] * Phase[q1, k]* Data_State[p2, k] * Phase[q2, k]
-function L0_DF_DF_Delta!(DF, Delta, Latent_Delta, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X,
-        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing) where {Rows, Columns, Skew_Dimension, 𝔽, T}
+function L0_DF_DF_Delta!(
+        DF, Delta, Latent_Delta, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X,
+        Data::Vararg{AbstractMatrix{T}}; Scaling, Cache = nothing
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
 
@@ -226,7 +254,8 @@ end
 #     Y .= (-V * p' * X .- ZT * p)
 
 function ManifoldsBase.Weingarten!(
-        ::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, Y, p, X, V) where {Rows, Columns, Skew_Dimension, 𝔽}
+        ::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, Y, p, X, V
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Y_R = reshape(Y, size(Y, 1), :)
     p_R = reshape(p, size(p, 1), :)
     X_R = reshape(X, size(X, 1), :)
@@ -255,8 +284,10 @@ function riemannian_Hessian!(M::Mean_Flat_Stiefel, Y, p, eG, eH, X)
     return Y
 end
 
-function Jacobian_Add!(Jac, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
-        Cache = Make_Cache(M, X, Data...)) where {Rows, Columns, Skew_Dimension, 𝔽}
+function Jacobian_Add!(
+        Jac, M::Mean_Flat_Stiefel{Rows, Columns, Skew_Dimension, 𝔽}, X, Data...;
+        Cache = Make_Cache(M, X, Data...)
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Jac .+= Cache[1]
-    nothing
+    return nothing
 end

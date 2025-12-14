@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 function Get_Component(X::ArrayPartition, sel)
     if length(sel) == 1
         return X.x[sel[1]]
@@ -10,7 +12,7 @@ function Get_Component(X::ArrayPartition, sel)
     else
         return zeros(0, 0)
     end
-    nothing
+    return nothing
 end
 
 function Get_Component(M::AbstractManifold, sel)
@@ -25,7 +27,7 @@ function Get_Component(M::AbstractManifold, sel)
     elseif length(sel) == 4
         return M[sel[1]][sel[2]][sel[3]][sel[4]]
     end
-    nothing
+    return nothing
 end
 
 # finds the first leaf from a node. If leaf returns same
@@ -35,7 +37,7 @@ function Complete_Component_Index(X::ArrayPartition, sel)
     else
         return sel
     end
-    nothing
+    return nothing
 end
 
 # this is a very general algorithm that goes throuh all the nodes of X and wraps around at the end
@@ -48,7 +50,7 @@ function Next_Component(X::ArrayPartition, sel)
         else
             return Climb_Tree(X.x[sel[1]], sel[2:end])
         end
-        nothing
+        return nothing
     end
 
     # finds the first non-end node as coming back down the tree
@@ -68,7 +70,7 @@ function Next_Component(X::ArrayPartition, sel)
             println("Last_Node: node is not an ArrayPartition.")
             return a, (-1,)
         end
-        nothing
+        return nothing
     end
 
     a, selp = Last_Node(X, sel)
@@ -79,7 +81,7 @@ function Next_Component(X::ArrayPartition, sel)
         #         println("LEAVE 2: Next_Component")
         return Complete_Component_Index(a, (selp[1:(end - 1)]..., selp[end] + 1))
     end
-    nothing
+    return nothing
 end
 
 function Count_Components(X::ArrayPartition)

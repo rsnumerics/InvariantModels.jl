@@ -1,7 +1,9 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 function Total_Variation_Of_Vectors(Skew_Dimension, vectors)
     r1 = reshape(vectors, Skew_Dimension, :, size(vectors, 2))
-    df1 = r1 - cat(r1[2:end, :, :], r1[[1], :, :], dims=1)
-    tv = vec(sum(sqrt.(real.(sum(df1 .* conj.(df1), dims=2))), dims=1))
+    df1 = r1 - cat(r1[2:end, :, :], r1[[1], :, :], dims = 1)
+    tv = vec(sum(sqrt.(real.(sum(df1 .* conj.(df1), dims = 2))), dims = 1))
     return tv
 end
 
@@ -38,8 +40,8 @@ function Find_NonConjugate_Cluster(Skew_Dimension, values, adj, remset, id)
     len = 1
     while (length(cl) < Skew_Dimension) && (len < length(clord))
         cj = conj.(values[cl])
-        if !in(conj(values[clord[len+1]]), values[cl])
-            push!(cl, clord[len+1])
+        if !in(conj(values[clord[len + 1]]), values[cl])
+            push!(cl, clord[len + 1])
         end
         len = len + 1
     end
@@ -110,7 +112,7 @@ function Find_Eigenvector_Clusters(Skew_Dimension, values, vectors)
     return clusters, clrepr, tv
 end
 
-function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=false, dims, ODE=false)
+function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse = false, dims, ODE = false)
     ############ CALCULATING LEFT AND RIGHT EIGENVECTORS ############
     if ODE
         importance = x -> real(x)
@@ -122,10 +124,11 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
         to_ode = x -> log(x) / Time_Step
     end
     if sparse
-        decomp, history = partialschur(AA_Right, nev=min(3 * dims * Skew_Dimension, size(AA_Right, 1)), which=:LM)
+        decomp, history = partialschur(AA_Right, nev = min(3 * dims * Skew_Dimension, size(AA_Right, 1)), which = :LM)
         ll, vv = partialeigen(decomp)
         decomp_T, history_T = partialschur(
-            AA_Right, nev=min(3 * dims * Skew_Dimension, size(AA_Right, 1)), which=:LM)
+            AA_Right, nev = min(3 * dims * Skew_Dimension, size(AA_Right, 1)), which = :LM
+        )
         ll_T, vv_T = partialeigen(decomp)
     else
         ll, vv = eigen(AA_Right)
@@ -150,7 +153,7 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
     #     display(vv_TT_vv[min_row:max_row, min_col:max_col])
     #     display(offdiag)
     #     display(vv_TT_vv[offdiag])
-#     @show norm(vv_TT_vv - Diagonal(diag(vv_TT_vv))), diag(vv_TT_vv)
+    #     @show norm(vv_TT_vv - Diagonal(diag(vv_TT_vv))), diag(vv_TT_vv)
     #         @show vv_TT_vv
     #         @show log.(ll) ./ Time_Step
     ############ SORTING EIGENVALUES ############
@@ -161,16 +164,16 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
     #         res = sqrt.(real.(num ./ den))
     #         pm = sortperm(res)  # by residual
     #     else
-    pm = sortperm(importance.(ll), rev=true) # by magnitude
+    pm = sortperm(importance.(ll), rev = true) # by magnitude
     #     end
     ############ finding clusters ############
     maxevals = min(3 * dims * Skew_Dimension, length(pm))
-    clusters_pm, clrepr_pm, tv0 = Find_Eigenvector_Clusters(Skew_Dimension, ll[pm[1:maxevals]], vv[:, pm[1:maxevals]])
+    clusters_pm, clrepr_pm, tv0 = Find_Eigenvector_Clusters(Skew_Dimension, ll[pm], vv[:, pm])
     tv = zero(tv0)
-    tv[pm[1:maxevals]] .= tv0
+    tv[pm] .= tv0
     # mapping back to the original indices
     maxdims = min(dims + 1, length(clusters_pm))
-    ord_clusters = sortperm(importance.(ll[pm[clrepr_pm]]), rev=true)[1:maxdims]
+    ord_clusters = sortperm(importance.(ll[pm[clrepr_pm]]), rev = true)[1:maxdims]
     clrepr = pm[clrepr_pm[ord_clusters]]
     clusters = [pm[cl] for cl in clusters_pm[ord_clusters]]
     # START SORTING: complex by frequencies, then real
@@ -179,8 +182,8 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
     # complex eigenvalues
     cl_c = setdiff(clrepr, cl_r)
     #     cl_cs = cl_c[sortperm(freq_measure.(ll[cl_c]))]
-    cl_cs = cl_c[sortperm(importance.(ll[cl_c]), rev=true)]
-    cl_rs = cl_r[sortperm(importance.(ll[cl_r]), rev=true)]
+    cl_cs = cl_c[sortperm(importance.(ll[cl_c]), rev = true)]
+    cl_rs = cl_r[sortperm(importance.(ll[cl_r]), rev = true)]
 
     # putting into a matrix
     cl_cplx_p = cl_cs[findall(imag.(ll[cl_cs]) .> 0)]
@@ -197,24 +200,24 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
 
     # making it into real values
     real_vectors = zeros(size(vv, 1), 2 * length(cl_cplx_fin_n) + length(cl_rs))
-    real_vectors[:, 1:2:(2*length(cl_cplx_fin_n))] .= real.(vv[:, cl_cplx_fin_n]) * 2
-    real_vectors[:, 2:2:(2*length(cl_cplx_fin_n))] .= -imag.(vv[:, cl_cplx_fin_n]) * 2
+    real_vectors[:, 1:2:(2 * length(cl_cplx_fin_n))] .= real.(vv[:, cl_cplx_fin_n]) * 2
+    real_vectors[:, 2:2:(2 * length(cl_cplx_fin_n))] .= -imag.(vv[:, cl_cplx_fin_n]) * 2
     Real_Index_Start = 1 + 2 * length(cl_cplx_fin_n)
     real_vectors[:, Real_Index_Start:end] .= real.(vv[:, cl_rs])
     #
     real_values = zeros(2 * length(cl_cplx_fin_n) + length(cl_rs))
-    real_values[1:2:(2*length(cl_cplx_fin_n))] .= real.(ll[cl_cplx_fin_n])
-    real_values[2:2:(2*length(cl_cplx_fin_n))] .= -imag.(ll[cl_cplx_fin_n])
+    real_values[1:2:(2 * length(cl_cplx_fin_n))] .= real.(ll[cl_cplx_fin_n])
+    real_values[2:2:(2 * length(cl_cplx_fin_n))] .= -imag.(ll[cl_cplx_fin_n])
     real_values[Real_Index_Start:end] .= real.(ll[cl_rs])
     #
     real_vectors_T = zeros(size(vv_T, 1), 2 * length(cl_cplx_fin_n) + length(cl_rs))
-    real_vectors_T[:, 1:2:(2*length(cl_cplx_fin_n))] .= real.(vv_T[:, cl_cplx_fin_n])
-    real_vectors_T[:, 2:2:(2*length(cl_cplx_fin_n))] .= imag.(vv_T[:, cl_cplx_fin_n])
+    real_vectors_T[:, 1:2:(2 * length(cl_cplx_fin_n))] .= real.(vv_T[:, cl_cplx_fin_n])
+    real_vectors_T[:, 2:2:(2 * length(cl_cplx_fin_n))] .= imag.(vv_T[:, cl_cplx_fin_n])
     real_vectors_T[:, Real_Index_Start:end] .= real.(vv_T[:, cl_rs])
 
     idx = zeros(eltype(clrepr), 2 * length(cl_cplx_fin_n) + length(cl_rs))
-    idx[1:2:(2*length(cl_cplx_fin_n))] .= cl_cplx_fin_n
-    idx[2:2:(2*length(cl_cplx_fin_n))] .= cl_cplx_fin_p
+    idx[1:2:(2 * length(cl_cplx_fin_n))] .= cl_cplx_fin_n
+    idx[2:2:(2 * length(cl_cplx_fin_n))] .= cl_cplx_fin_p
     idx[Real_Index_Start:end] .= cl_rs
     unmatched = setdiff(clrepr, idx)
     if isempty(unmatched)
@@ -222,15 +225,19 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
     else
         println("Unmatched complex eigenvalues")
         for cl in setdiff(clrepr, idx)
-            println("  Eigenvalue ", cl, " = ", to_ode(ll[cl]) .* (1 / 2 / pi),
-                " [Hz] ", " ==>> ", to_ode(ll[cl]), " [rad/s] tv = ", tv[cl])
+            println(
+                "  Eigenvalue ", cl, " = ", to_ode(ll[cl]) .* (1 / 2 / pi),
+                " [Hz] ", " ==>> ", to_ode(ll[cl]), " [rad/s] tv = ", tv[cl]
+            )
             @show ll[clusters[findfirst(isequal(cl), clrepr)]]
         end
     end
     println("Trimmed eigenvalues")
     for cl in idx
-        println("  Eigenvalue ", cl, " = ", to_ode(ll[cl]) .* (1 / 2 / pi),
-            " [Hz] ", " ==>> ", to_ode(ll[cl]), " [rad/s] tv = ", tv[cl])
+        println(
+            "  Eigenvalue ", cl, " = ", to_ode(ll[cl]) .* (1 / 2 / pi),
+            " [Hz] ", " ==>> ", to_ode(ll[cl]), " [rad/s] tv = ", tv[cl]
+        )
     end
     W_R = permutedims(reshape(real_vectors, Skew_Dimension, :, size(real_vectors, 2)), (2, 1, 3)) # * sqrt(Skew_Dimension)
     W_C = permutedims(reshape(cplx_vectors, Skew_Dimension, :, size(cplx_vectors, 2)), (2, 1, 3)) # * sqrt(Skew_Dimension)
@@ -240,28 +247,32 @@ function Decompose_Eigenvectors(AA_Right, Skew_Dimension; Time_Step, sparse=fals
     return W_R, W_C, V_R, V_C, Real_Index_Start, real_values, cplx_values
 end
 
-function Bundle_Decomposition_By_Eigenvectors(BB, SH; Time_Step, sparse=false, dims=size(BB, 1))
+function Bundle_Decomposition_By_Eigenvectors(BB, SH; Time_Step, sparse = false, dims = size(BB, 1))
     Skew_Dimension = size(BB, 2)
     AA_Right = Transfer_Operator_Right(BB, SH)
-    W_R_SH, W_C, V_R, V_C, Real_Index_Start, real_values, cplx_values = Decompose_Eigenvectors(
-        AA_Right, Skew_Dimension; Time_Step=Time_Step, sparse=sparse, dims=dims)
+    W_R_SH, W_C, V_R0_SH, V_C, Real_Index_Start, real_values, cplx_values = Decompose_Eigenvectors(
+        AA_Right, Skew_Dimension; Time_Step = Time_Step, sparse = sparse, dims = dims
+    )
     @tullio W_R[i, k, j] := W_R_SH[i, l, j] * SH[k, l]
-    V_R = zero(W_R)
-    V_R_SH = zero(W_R)
+    @tullio V_R0[i, k, j] := V_R0_SH[i, l, j] * SH[k, l]
+    V_R = zeros(eltype(W_R), reverse(size(W_R))...)
+    V_R_SH = zero(V_R)
     for k in axes(V_R, 2)
-        V_R[:, k, :] .= inv(W_R[:, k, :])
-        V_R_SH[:, k, :] .= inv(W_R_SH[:, k, :])
+        V_R[:, k, :] .= pinv(V_R0[:, k, :] * W_R[:, k, :]) * V_R0[:, k, :]
+        V_R_SH[:, k, :] .= pinv(V_R0_SH[:, k, :] * W_R_SH[:, k, :]) * V_R0_SH[:, k, :]
+        #         V_R[:, k, :] .= inv(W_R[:, k, :])
+        #         V_R_SH[:, k, :] .= inv(W_R_SH[:, k, :])
     end
     @tullio Lambda_P[i, k, r] := V_R_SH[i, k, j] * BB[j, k, l] * W_R[l, k, r]
-    @show norm(Lambda_P .- mean(Lambda_P, dims=2))
+    @show norm(Lambda_P .- mean(Lambda_P, dims = 2))
     # remove the off diagonal zeros all just for testing
     Lambda_R = zero(Lambda_P[:, 1, :])
     Bundles = []
-    for k in 1:2:Real_Index_Start-2
-        push!(Bundles, k:k+1)
-        Lambda_R[k:k+1, k:k+1] .= dropdims(mean(Lambda_P[k:k+1, :, k:k+1], dims=2), dims=2)
+    for k in 1:2:(Real_Index_Start - 2)
+        push!(Bundles, k:(k + 1))
+        Lambda_R[k:(k + 1), k:(k + 1)] .= dropdims(mean(Lambda_P[k:(k + 1), :, k:(k + 1)], dims = 2), dims = 2)
     end
-    for k in Real_Index_Start:size(BB, 1)
+    for k in Real_Index_Start:size(Lambda_P, 1)
         push!(Bundles, k:k)
         Lambda_R[k, k] = mean(Lambda_P[k, :, k])
     end
@@ -269,9 +280,9 @@ function Bundle_Decomposition_By_Eigenvectors(BB, SH; Time_Step, sparse=false, d
     @show norm(Lambda_P .- reshape(Lambda_R, size(Lambda_R, 1), 1, :))
     # testing over
     W_R_SH_ORTH = zero(W_R_SH)
-    XX_SH = zero(W_R_SH)
-    YY_SH = zero(W_R_SH)
-    YY_SH_N = zero(W_R_SH)
+    XX_SH = zeros(eltype(W_R_SH), size(W_R_SH, 3), size(W_R_SH, 2), size(W_R_SH, 3))
+    YY_SH = zero(XX_SH)
+    YY_SH_N = zero(XX_SH)
     for Bundle in Bundles
         for k in axes(W_R, 2)
             F = svd(W_R_SH[:, k, Bundle])
@@ -290,21 +301,21 @@ function Bundle_Decomposition_By_Eigenvectors(BB, SH; Time_Step, sparse=false, d
 
     @tullio W_R_ORTH[i, k, j] := W_R_SH_ORTH[i, l, j] * SH[k, l]
     @tullio XX[i, k, j] := XX_SH[i, l, j] * SH[k, l]
-    V_R_ORTH = zero(W_R)
-    V_R_SH_ORTH = zero(W_R)
-    YY = zero(XX)
+    V_R_ORTH = zero(V_R)
+    V_R_SH_ORTH = zero(V_R)
+    YY = zeros(eltype(XX), reverse(size(XX))...)
     for k in axes(V_R, 2)
-        V_R_ORTH[:, k, :] .= inv(W_R_ORTH[:, k, :])
-        V_R_SH_ORTH[:, k, :] .= inv(W_R_SH_ORTH[:, k, :])
-        YY[:, k, :] .= inv(XX[:, k, :])
+        V_R_ORTH[:, k, :] .= pinv(W_R_ORTH[:, k, :])
+        V_R_SH_ORTH[:, k, :] .= pinv(W_R_SH_ORTH[:, k, :])
+        YY[:, k, :] .= pinv(XX[:, k, :])
     end
     @tullio Unreduced_Model[i, k, r] := V_R_SH_ORTH[i, k, j] * BB[j, k, l] * W_R_ORTH[l, k, r]
     @tullio Reduced_Model[i, k, r] := YY_SH[i, k, j] * Unreduced_Model[j, k, l] * XX[l, k, r]
     println("Bundle_Decomposition_By_Eigenvectors diagnostics:")
     # Reduced_Model = TR * YY_SH[i, k, j] * Unreduced_Model[j, k, l] * XX[l, k, r] * TR^-1
     @show norm(Reduced_Model .- reshape(Lambda_R, size(Lambda_R, 1), 1, :))
-    @show norm(Reduced_Model .- mean(Reduced_Model, dims=2))
-    @show norm(Unreduced_Model .- mean(Unreduced_Model, dims=2))
+    @show norm(Reduced_Model .- mean(Reduced_Model, dims = 2))
+    @show norm(Unreduced_Model .- mean(Unreduced_Model, dims = 2))
     Data_Encoder = V_R_ORTH
     Data_Decoder = W_R_ORTH
     Reduced_Encoder = YY
@@ -313,11 +324,12 @@ function Bundle_Decomposition_By_Eigenvectors(BB, SH; Time_Step, sparse=false, d
 end
 
 ### TODO CREATE `AA_Right` SUCH THAT NO SHIFT IS NECESSARY in `WW`
-function Decompose_Model_Right(BB, SH; Time_Step, sparse=false, dims=size(BB, 1))
+function Decompose_Model_Right(BB, SH; Time_Step, sparse = false, dims = size(BB, 1))
     Skew_Dimension = size(SH, 1)
     AA_Right = Transfer_Operator_Right(BB, SH)
     W_R, W_C, V_R, V_C, Real_Index_Start, real_values, cplx_values = Decompose_Eigenvectors(
-        AA_Right, Skew_Dimension; Time_Step=Time_Step, sparse=sparse, dims=dims)
+        AA_Right, Skew_Dimension; Time_Step = Time_Step, sparse = sparse, dims = dims
+    )
     println("Decompose_Model_Right: Complex Bundle")
     # Complex vector bundle calculation
     @tullio W_Csh[i, k, j] := W_C[i, l, j] * SH[k, l]
@@ -333,11 +345,13 @@ function Decompose_Model_Right(BB, SH; Time_Step, sparse=false, dims=size(BB, 1)
         V_I_Csh[:, k, :] .= TT * V_Csh[:, k, :] # inv(W_Csh[:,k,:])
     end
     @tullio Lambda_C[i, j, k] := V_I_C[i, k, r] * BB[r, k, s] * W_Csh[s, k, j]
-    Lambda_Diagonal_C = diag(dropdims(mean(Lambda_C, dims=3), dims=3))
+    Lambda_Diagonal_C = diag(dropdims(mean(Lambda_C, dims = 3), dims = 3))
     # testing
     @tullio K[i, k, r] := W_C[i, k, j] * Lambda_C[j, l, k] * V_I_Csh[l, k, r]
-    ll_err = norm(Lambda_C .-
-                  reshape(diagm(Lambda_Diagonal_C), length(Lambda_Diagonal_C), length(Lambda_Diagonal_C), 1))
+    ll_err = norm(
+        Lambda_C .-
+            reshape(diagm(Lambda_Diagonal_C), length(Lambda_Diagonal_C), length(Lambda_Diagonal_C), 1)
+    )
     if ll_err > 16 * sqrt(eps(1.0))
         println("Unexpected error in (complex) eigenvalue calculation = ", ll_err)
     end
@@ -362,7 +376,7 @@ function Decompose_Model_Right(BB, SH; Time_Step, sparse=false, dims=size(BB, 1)
         V_I_Rsh[:, k, :] .= TT * V_Rsh[:, k, :] # inv(W_Rsh[:,k,:])
     end
     @tullio Lambda_R[i, j, k] := V_I_R[i, k, r] * BB[r, k, s] * W_Rsh[s, k, j]
-    Lambda_Diagonal_R = dropdims(mean(Lambda_R, dims=3), dims=3)
+    Lambda_Diagonal_R = dropdims(mean(Lambda_R, dims = 3), dims = 3)
     # testing
     @tullio K[i, k, r] := W_R[i, k, j] * Lambda_R[j, l, k] * V_I_Rsh[l, k, r]
     ll_err = norm(Lambda_R .- reshape(Lambda_Diagonal_R, size(Lambda_Diagonal_R, 1), size(Lambda_Diagonal_R, 2), 1))
@@ -386,7 +400,7 @@ function First_Spectrum_Point(BB, SH)
     return values[id]
 end
 
-function Decompose_Model_ODE(Jac, Generator; sparse=false, dims=size(Jac, 1))
+function Decompose_Model_ODE(Jac, Generator; sparse = false, dims = size(Jac, 1))
     State_Dimension = size(Jac, 1)
     @assert State_Dimension == size(Jac, 2) "Decompose_Model_ODE: Jacobian is not square"
     Skew_Dimension = size(Jac, 3)
@@ -399,11 +413,12 @@ function Decompose_Model_ODE(Jac, Generator; sparse=false, dims=size(Jac, 1))
     Big_Jac_RS = reshape(Big_Jac, State_Dimension * Skew_Dimension, State_Dimension * Skew_Dimension)
     @show eigvals(Big_Jac_RS)
     W_R, W_C, V_R, V_C, Real_Index_Start, real_values, cplx_values = Decompose_Eigenvectors(
-        Big_Jac_RS, Skew_Dimension; Time_Step=1.0, sparse=sparse, dims=dims, ODE=true)
+        Big_Jac_RS, Skew_Dimension; Time_Step = 1.0, sparse = sparse, dims = dims, ODE = true
+    )
     return W_R, W_C, V_R, V_C, Real_Index_Start, real_values, cplx_values
 end
 
-function Decompose_Diagonal_Right(BB, SH; Time_Step, sparse=false, dims=size(BB, 1))
+function Decompose_Diagonal_Right(BB, SH; Time_Step, sparse = false, dims = size(BB, 1))
     # V_I_Rsh,              :
     # W_Rsh,
     # Lambda_Diagonal_R,

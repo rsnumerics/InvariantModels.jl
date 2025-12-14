@@ -1,37 +1,39 @@
 # SPDX-License-Identifier: EUPL-1.2
 
-struct ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽} <: AbstractDecoratorManifold{𝔽}
+struct ArrayStiefel{Rows, Columns, Skew_Dimension, tall, 𝔽} <: AbstractDecoratorManifold{𝔽}
     manifold::PowerManifold
 end
 
 function ArrayStiefel(
-    Rows::Int,
-    Columns::Int,
-    Skew_Dimension::Int;
-    field::AbstractNumbers=ℝ,
-    tall=true,
-)
+        Rows::Int,
+        Columns::Int,
+        Skew_Dimension::Int;
+        field::AbstractNumbers = ℝ,
+        tall = true,
+    )
     if tall
         manifold = PowerManifold(Stiefel(Rows, Columns, field), Skew_Dimension)
     else
         manifold = PowerManifold(Stiefel(Columns, Rows, field), Skew_Dimension)
     end
-    return ArrayStiefel{Rows,Columns,Skew_Dimension,tall,field}(manifold)
+    return ArrayStiefel{Rows, Columns, Skew_Dimension, tall, field}(manifold)
 end
 
-ManifoldsBase.decorated_manifold(M::ArrayStiefel) = M.manifold
-ManifoldsBase.active_traits(f, ::ArrayStiefel, args...) =
-    ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::ArrayStiefel) = M.manifold
+
+# Forward all functions by default to the decorated base manifold
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefel, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::ArrayStiefel, ::Any, P::Type) = ManifoldsBase.SimpleForwardingType()
 
 @inline ManifoldsBase.default_retraction_method(M::ArrayStiefel) =
     default_retraction_method(M.manifold)
 
-function Base.zero(M::ArrayStiefel)
-    return rand(M)
+function Base.zero(M)
+    return rand(M.manifold)
 end
 
-function Slice(M::ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽}, X, Encoded_Slice) where {Rows,Columns,Skew_Dimension,tall,𝔽}
-    M_Slice = ArrayStiefel(Rows, Columns, 1, field=𝔽, tall=tall)
+function Slice(M::ArrayStiefel{Rows, Columns, Skew_Dimension, tall, 𝔽}, X, Encoded_Slice) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
+    M_Slice = ArrayStiefel(Rows, Columns, 1, field = 𝔽, tall = tall)
     X_Slice = zero(M_Slice)
     X_Slice_View = view(X_Slice, :, :, 1)
     @tullio X_Slice_View[i, j] = X[i, j, k] * Encoded_Slice[k]
@@ -39,10 +41,10 @@ function Slice(M::ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽}, X, Encode
 end
 
 function Make_Cache(
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,true,𝔽},
-    X,
-    Data...,
-) where {Rows,Columns,Skew_Dimension,𝔽}
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, true, 𝔽},
+        X,
+        Data...,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show size(X), size(Phase)
@@ -52,11 +54,11 @@ function Make_Cache(
 end
 
 function Update_Cache!(
-    Cache,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,true,𝔽},
-    X,
-    Data...,
-) where {Rows,Columns,Skew_Dimension,𝔽}
+        Cache,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, true, 𝔽},
+        X,
+        Data...,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     Result_Matrix, Result_Value = Cache
@@ -66,10 +68,10 @@ function Update_Cache!(
 end
 
 function Make_Cache(
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data...,
-) where {Rows,Columns,Skew_Dimension,𝔽}
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data...,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show size(X), size(Phase)
@@ -80,11 +82,11 @@ function Make_Cache(
 end
 
 function Update_Cache!(
-    Cache,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data...,
-) where {Rows,Columns,Skew_Dimension,𝔽}
+        Cache,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data...,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Phase = Data[1]
     Data_State = Data[3]
     Result_Matrix, Result_Value = Cache
@@ -94,35 +96,35 @@ function Update_Cache!(
 end
 
 function Evaluate!(
-    Result,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽},
-    X,
-    Data...;
-    Cache=Make_Cache(M, X, Data...),
-) where {Rows,Columns,Skew_Dimension,tall,𝔽}
+        Result,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, tall, 𝔽},
+        X,
+        Data...;
+        Cache = Make_Cache(M, X, Data...),
+    ) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
     Result .= Cache[2]
     return nothing
 end
 
 function Evaluate_Add!(
-    Result,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,tall,𝔽},
-    X,
-    Data...;
-    Cache=Make_Cache(M, X, Data...),
-) where {Rows,Columns,Skew_Dimension,tall,𝔽}
+        Result,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, tall, 𝔽},
+        X,
+        Data...;
+        Cache = Make_Cache(M, X, Data...),
+    ) where {Rows, Columns, Skew_Dimension, tall, 𝔽}
     Result .+= Cache[2]
     return nothing
 end
 
 function L0_DF!(
-    DF,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,true,𝔽},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    L0,
-    Cache=Make_Cache(M, X, Data...),
-) where {Rows,Columns,Skew_Dimension,𝔽,T}
+        DF,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, true, 𝔽},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        L0,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -131,13 +133,13 @@ function L0_DF!(
 end
 
 function L0_DF!(
-    DF,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    L0,
-    Cache=Make_Cache(M, X, Data...),
-) where {Rows,Columns,Skew_Dimension,𝔽,T}
+        DF,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        L0,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -146,17 +148,17 @@ function L0_DF!(
 end
 
 function Scaled_Hessian!(
-    HH,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    Scaling,
-    Cache=nothing,
-) where {Rows,Columns,Skew_Dimension,𝔽,T}
+        HH,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        Scaling,
+        Cache = nothing,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     Id = Diagonal(I, size(X, 2))
-    @tullio HH[p1, i1, q1, p2, i2, q2] =
+    return @tullio HH[p1, i1, q1, p2, i2, q2] =
         Id[i1, i2] *
         Scaling[k] *
         Data_State[p1, k] *
@@ -167,15 +169,15 @@ end
 
 # CALCULATE HH[p1, i1, q1, p2, i2, q2] = L0[i1, i2, k] * Data_State[p1, k] * Phase[q1, k]* Data_State[p2, k] * Phase[q2, k]
 function L0_DF_DF_Delta!(
-    DF,
-    Delta,
-    Latent_Delta,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    Scaling,
-    Cache=nothing,
-) where {Rows,Columns,Skew_Dimension,𝔽,T}
+        DF,
+        Delta,
+        Latent_Delta,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        Scaling,
+        Cache = nothing,
+    ) where {Rows, Columns, Skew_Dimension, 𝔽, T}
     Phase = Data[1]
     Data_State = Data[3]
     #     @show  size(DF), size(L0), size(Data_State), size(Phase)
@@ -198,12 +200,12 @@ function riemannian_Hessian!(M::ArrayStiefel, Y, p, eG, eH, X)
 end
 
 function Jacobian_Add!(
-    Jac,
-    M::ArrayStiefel{Rows,Columns,Skew_Dimension,false,𝔽},
-    X,
-    Data...;
-    Cache=Make_Cache(M, X, Data...),
-) where {Rows,Columns,Skew_Dimension,𝔽}
+        Jac,
+        M::ArrayStiefel{Rows, Columns, Skew_Dimension, false, 𝔽},
+        X,
+        Data...;
+        Cache = Make_Cache(M, X, Data...),
+    ) where {Rows, Columns, Skew_Dimension, 𝔽}
     Jac .+= Cache[1]
-    nothing
+    return nothing
 end

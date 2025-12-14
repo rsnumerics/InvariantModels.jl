@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: EUPL-1.2
+
 module InvariantModels
 
 macro exportinstances(enum)
@@ -56,7 +58,7 @@ export Select_Bundles_By_Energy
 export Decompose_Data
 export Decomposed_Data_Scaling
 
-using DifferentialEquations
+using OrdinaryDiffEq
 using Interpolations
 using UnicodePlots
 include("Generate_From_ODE.jl")
@@ -90,6 +92,8 @@ export Model_From_Function
 export Model_From_ODE
 # - NEW
 export Model_From_Function_Alpha
+#
+# include("DMD_Model.jl")
 # single foliation
 include("Foliation.jl")
 # set of foliations
@@ -106,21 +110,24 @@ export Multi_Foliation_Test_Problem
 export Optimise!
 #
 using StatsBase
-using NonlinearSolve
+using NonlinearSolve, NLsolve
 using LaTeXStrings
 using Makie
 include("Polar_Manifold.jl")
 export Find_DATA_Manifold
 export Find_MAP_Manifold
 export Create_Plot
-export Plot_Data_Result!
-export Plot_Data_Error!
+export Data_Result
+export Data_Error
+export Model_Result
+export Plot_Backbone_Curves!
+export Plot_Error_Curves!
 export Plot_Error_Trace
 export Annotate_Plot!
 include("Polar_Implicit_Manifold.jl")
 export Extract_Manifold_Embedding
 include("Polar_ODE_Manifold.jl")
 export Find_ODE_Manifold
-export Plot_Model_Result!
+# export Model_Result
 
 end

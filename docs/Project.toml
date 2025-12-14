@@ -1,3 +1,10 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
 InvariantModels = "8e67f854-b91b-4c84-9489-d19c7173165d"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+JLSO = "9da8a3cd-07a3-59c0-a743-3fdc52c30d11"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"

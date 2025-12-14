@@ -68,32 +68,39 @@ Time_Step = 2 * pi / 19 / Omega_ODE
 
 Max_Amplitude = 0.6
 if Generate
-    AA = randn(4, Training_Trajectories)
-    IC_x_Train =
-        Max_Amplitude *
-        AA *
-        diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
-        diagm(0.95 .+ 0.1 .* rand(size(AA, 2)))
-    AA = randn(4, Testing_Trajectories)
-    IC_x_Test =
-        0.95 *
-        Max_Amplitude *
-        AA *
-        diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
-        diagm(0.95 .+ 0.1 .* rand(size(AA, 2)))
+#     AA = randn(4, Training_Trajectories)
+#     IC_x_Train =
+#         Max_Amplitude *
+#         AA *
+#         diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
+#         diagm(0.95 .+ 0.1 .* rand(size(AA, 2)))
+#     AA = randn(4, Testing_Trajectories)
+#     IC_x_Test =
+#         0.95 *
+#         Max_Amplitude *
+#         AA *
+#         diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
+#         diagm(0.95 .+ 0.1 .* rand(size(AA, 2)))
+#
+#     # not random, but uniformly distributed
+#     function Random_Phase(Skew_Dimension, Trajectories)
+#         if Trajectories > 1
+#             IC_Alpha = transpose(Barycentric_Interpolation_Matrix(Forcing_Grid, Chebyshev_Grid(Trajectories, Forcing_Grid[1], Forcing_Grid[end])))
+#         else
+#             IC_Alpha = transpose(Barycentric_Interpolation_Matrix(Forcing_Grid, rand(Uniform(Forcing_Grid[1], Forcing_Grid[end]), Trajectories)))
+#         end
+#         return IC_Alpha
+#     end
+#
+#     IC_Alpha_Train = Random_Phase(Skew_Dimension, Training_Trajectories)
+#     IC_Alpha_Test = Random_Phase(Skew_Dimension, Testing_Trajectories)
+#     JLSO.save("ICS-$(Name)-$(DATAVER).bson", :IC_x_Train => IC_x_Train, :IC_x_Test => IC_x_Test, :IC_Alpha_Train => IC_Alpha_Train, :IC_Alpha_Test => IC_Alpha_Test, format = :bson, compression = :none)
 
-    # not random, but uniformly distributed
-    function Random_Phase(Skew_Dimension, Trajectories)
-        if Trajectories > 1
-            IC_Alpha = transpose(Barycentric_Interpolation_Matrix(Forcing_Grid, Chebyshev_Grid(Trajectories, Forcing_Grid[1], Forcing_Grid[end])))
-        else
-            IC_Alpha = transpose(Barycentric_Interpolation_Matrix(Forcing_Grid, rand(Uniform(Forcing_Grid[1], Forcing_Grid[end]), Trajectories)))
-        end
-        return IC_Alpha
-    end
-
-    IC_Alpha_Train = Random_Phase(Skew_Dimension, Training_Trajectories)
-    IC_Alpha_Test = Random_Phase(Skew_Dimension, Testing_Trajectories)
+    IC_Dict = JLSO.load("ICS-$(Name)-$(DATAVER).bson")
+    IC_x_Train = IC_Dict[:IC_x_Train]
+    IC_x_Test = IC_Dict[:IC_x_Test]
+    IC_Alpha_Train = IC_Dict[:IC_Alpha_Train]
+    IC_Alpha_Test = IC_Dict[:IC_Alpha_Test]
 
     IC_Force = [0.0; 0.0; 0.5]
     List_of_Data, List_of_Phases = Generate_From_ODE(
@@ -118,16 +125,16 @@ if Generate
         IC_Alpha_Test,
         ones(Int, Testing_Trajectories) * Trajectory_Length,
     )
-    @show "RAWDATA-$(Name)-$(DATAVER).bson"
-    JLSO.save(
-        "RAWDATA-$(Name)-$(DATAVER).bson",
-        :Parameters         => Parameters,
-        :Time_Step          => Time_Step,
-        :List_of_Data       => List_of_Data,
-        :List_of_Phases     => List_of_Phases,
-        :List_of_Data_T     => List_of_Data_T,
-        :List_of_Phases_T   => List_of_Phases_T,
-    )
+#     @show "RAWDATA-$(Name)-$(DATAVER).bson"
+#     JLSO.save(
+#         "RAWDATA-$(Name)-$(DATAVER).bson",
+#         :Parameters         => Parameters,
+#         :Time_Step          => Time_Step,
+#         :List_of_Data       => List_of_Data,
+#         :List_of_Phases     => List_of_Phases,
+#         :List_of_Data_T     => List_of_Data_T,
+#         :List_of_Phases_T   => List_of_Phases_T,
+#     )
 else
     data = JLSO.load("RAWDATA-$(Name)-$(DATAVER).bson")
     Parameters          = data[:Parameters]
@@ -136,6 +143,13 @@ else
     List_of_Phases      = data[:List_of_Phases]
     List_of_Data_T      = data[:List_of_Data_T]
     List_of_Phases_T    = data[:List_of_Phases_T]
+
+    # making it reproducible
+#     IC_x_Train = hcat([da[:,1] for da in data[:List_of_Data]]...)
+#     IC_x_Test = hcat([da[:,1] for da in data[:List_of_Data_T]]...)
+#     IC_Alpha_Train = hcat([da[:,1] for da in data[:List_of_Phases]]...)
+#     IC_Alpha_Test = hcat([da[:,1] for da in data[:List_of_Phases_T]]...)
+#     JLSO.save("ICS-$(Name)-$(DATAVER).bson", :IC_x_Train => IC_x_Train, :IC_x_Test => IC_x_Test, :IC_Alpha_Train => IC_Alpha_Train, :IC_Alpha_Test => IC_Alpha_Test, format = :bson, compression = :none)
 end
 
 if Process

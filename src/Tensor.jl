@@ -1,13 +1,9 @@
-
-## ---------------------------------------------------------------------------------------
-## TensorManifold
-##
-## ---------------------------------------------------------------------------------------
+# SPDX-License-Identifier: EUPL-1.2
 
 struct TensorManifold{𝔽} <: AbstractDecoratorManifold{𝔽}
-    ranks::Array{T,1} where {T<:Integer}
-    children::Array{T,2} where {T<:Integer}
-    dim2ind::Array{T,1} where {T<:Integer}
+    ranks::Array{T, 1} where {T <: Integer}
+    children::Array{T, 2} where {T <: Integer}
+    dim2ind::Array{T, 1} where {T <: Integer}
     manifold::ProductManifold
 end
 
@@ -17,12 +13,12 @@ end
 
 @inline Base.getindex(M::TensorManifold, i::Integer) = M.manifold[i]
 
-ManifoldsBase.decorated_manifold(M::TensorManifold) = M.manifold
-ManifoldsBase.active_traits(f, ::TensorManifold, args...) =
-    ManifoldsBase.IsExplicitDecorator()
+@inline ManifoldsBase.decorated_manifold(M::TensorManifold) = M.manifold
+@inline ManifoldsBase.get_forwarding_type(::TensorManifold, ::Any) = ManifoldsBase.SimpleForwardingType()
+@inline ManifoldsBase.get_forwarding_type(::TensorManifold, ::Any, P::Type) = ManifoldsBase.SimpleForwardingType()
 
 # internal
-function nr_nodes(children::Array{T,2}) where {T<:Integer}
+function nr_nodes(children::Array{T, 2}) where {T <: Integer}
     return size(children, 1)
 end
 
@@ -30,7 +26,7 @@ function nr_nodes(hten::TensorManifold{𝔽}) where {𝔽}
     return nr_nodes(hten.children)
 end
 
-function is_leaf(children::Array{T,2}, ii) where {T<:Integer}
+function is_leaf(children::Array{T, 2}, ii) where {T <: Integer}
     return prod(children[ii, :] .== 0)
 end
 
@@ -74,7 +70,7 @@ function define_tree(d, tree_type = :balanced)
                 dims[ii_right] = dims[ii][2:end]
             else
                 dims[ii_left] = dims[ii][1:div(end, 2)]
-                dims[ii_right] = dims[ii][(div(end, 2)+1):end]
+                dims[ii_right] = dims[ii][(div(end, 2) + 1):end]
             end
         end
         ii += 1
@@ -88,15 +84,15 @@ end
 
 # a complicated constructor
 function TensorManifold(
-    dims::Array{T,1},
-    ranks::Array{T,1},
-    children,
-    dim2ind,
-    tree_type = :balanced;
-    field::AbstractNumbers = ℝ,
-) where {T<:Integer}
+        dims::Array{T, 1},
+        ranks::Array{T, 1},
+        children,
+        dim2ind,
+        tree_type = :balanced;
+        field::AbstractNumbers = ℝ,
+    ) where {T <: Integer}
     M = []
-    for ii = 1:nr_nodes(children)
+    for ii in 1:nr_nodes(children)
         if is_leaf(children, ii)
             dim_id = findfirst(isequal(ii), dim2ind)
             n_ii = dims[dim_id]
@@ -118,17 +114,17 @@ end
 
 # create a rank structure such that 'ratio' is the lost rank
 function cascade_ranks(
-    children,
-    dim2ind,
-    topdim,
-    dims;
-    node_ratio = 1.0,
-    leaf_ranks = [max(1.0, d / 2) for d in dims],
-    max_rank = 16,
-)
+        children,
+        dim2ind,
+        topdim,
+        dims;
+        node_ratio = 1.0,
+        leaf_ranks = [max(1.0, d / 2) for d in dims],
+        max_rank = 16,
+    )
     ranks = zero(children[:, 1])
     ranks[1] = topdim
-    for ii = nr_nodes(children):-1:2
+    for ii in nr_nodes(children):-1:2
         if is_leaf(children, ii)
             id = findfirst(isequal(ii), dim2ind)
             n_ii = dims[id]
@@ -170,13 +166,13 @@ end
 
 # TODO: documentation
 function HTTensor(
-    dims::Array{T,1},
-    topdim::T = 1,
-    tree_type = :balanced;
-    node_ratio = 1.0,
-    leaf_ranks = [max(1.0, d / 2) for d in dims],
-    max_rank = 16,
-) where {T<:Integer}
+        dims::Array{T, 1},
+        topdim::T = 1,
+        tree_type = :balanced;
+        node_ratio = 1.0,
+        leaf_ranks = [max(1.0, d / 2) for d in dims],
+        max_rank = 16,
+    ) where {T <: Integer}
     children, dim2ind = define_tree(length(dims), tree_type)
     nodes = nr_nodes(children)
     # create ranks at each node
@@ -284,34 +280,34 @@ end
 
 # this acts as a cache for the tensor evaluations and gradients
 struct Tensor_Cache{T}
-    Is_Valid_Forward::Array{Bool,1}
-    Is_Valid_Reverse::Array{Bool,1}
-    Forward_Product::Array{Array{T,3},1}
-    Reverse_Product::Array{Array{T,3},1}
+    Is_Valid_Forward::Array{Bool, 1}
+    Is_Valid_Reverse::Array{Bool, 1}
+    Forward_Product::Array{Array{T, 3}, 1}
+    Reverse_Product::Array{Array{T, 3}, 1}
 end
 
 function Invalidate_Forward(DV::Tensor_Cache)
     DV.Is_Valid_Forward .= false
-    nothing
+    return nothing
 end
 
 function Invalidate_Reverse(DV::Tensor_Cache)
     DV.Is_Valid_Reverse .= false
-    nothing
+    return nothing
 end
 
 function Invalidate_All(DV::Tensor_Cache)
     DV.Is_Valid_Forward .= false
     DV.Is_Valid_Reverse .= false
-    nothing
+    return nothing
 end
 
 function Tensor_Cache(T, nodes)
     return Tensor_Cache{T}(
         zeros(Bool, nodes),
         zeros(Bool, nodes),
-        Array{Array{T,3},1}(undef, nodes),
-        Array{Array{T,3},1}(undef, nodes),
+        Array{Array{T, 3}, 1}(undef, nodes),
+        Array{Array{T, 3}, 1}(undef, nodes),
     )
 end
 
@@ -345,12 +341,12 @@ end
 #   dt: to replace X at index rep
 #   rep: where to replace X with dt
 function Update_Forward_Product!(
-    DV::Tensor_Cache{T},
-    M::TensorManifold{field},
-    X,
-    Data...;
-    ii,
-) where {field,T}
+        DV::Tensor_Cache{T},
+        M::TensorManifold{field},
+        X,
+        Data...;
+        ii,
+    ) where {field, T}
     #     print("v=", ii, "/", length(X.x), "_")
     if DV.Is_Valid_Forward[ii]
         return nothing
@@ -395,10 +391,10 @@ end
 
 # invalidates Forward_Product that are dependent on node "ii"
 function Invalidate_Forward(
-    DV::Tensor_Cache{T},
-    M::TensorManifold{field},
-    ii,
-) where {field,T}
+        DV::Tensor_Cache{T},
+        M::TensorManifold{field},
+        ii,
+    ) where {field, T}
     DV.Is_Valid_Forward[ii] = false
     # not the root node
     if ii != 1
@@ -423,12 +419,12 @@ function Make_Forward_Product(M::TensorManifold{field}, X, Data...) where {field
 end
 
 function Evaluate!(
-    Result,
-    M::TensorManifold{field},
-    X,
-    Data...;
-    Cache::Tensor_Cache = Make_Forward_Product(M, X, Data...),
-) where {field}
+        Result,
+        M::TensorManifold{field},
+        X,
+        Data...;
+        Cache::Tensor_Cache = Make_Forward_Product(M, X, Data...),
+    ) where {field}
     Result .= dropdims(Cache.Forward_Product[1], dims = 2)
     #     @show size(Cache.Forward_Product)
     #     @show size(Cache.Forward_Product[1])
@@ -438,13 +434,13 @@ end
 
 # adds to the Result
 function Evaluate_Add!(
-    Result,
-    M::TensorManifold{field},
-    X,
-    Data...;
-    Cache::Tensor_Cache = Make_Forward_Product(M, X, Data...),
-    Lambda = 1,
-) where {field}
+        Result,
+        M::TensorManifold{field},
+        X,
+        Data...;
+        Cache::Tensor_Cache = Make_Forward_Product(M, X, Data...),
+        Lambda = 1,
+    ) where {field}
     #     Result .+= dropdims(Cache.Forward_Product[1], dims=2)
     res = Cache.Forward_Product[1]
     if Lambda == 1
@@ -456,22 +452,22 @@ function Evaluate_Add!(
 end
 
 function BVpmulBmulV!(
-    bvecs_ii::AbstractArray{T,3},
-    B::AbstractArray{U,2},
-    vecs_sibling::AbstractArray{T,3},
-    bvecs_parent::AbstractArray{T,3},
-) where {T,U}
+        bvecs_ii::AbstractArray{T, 3},
+        B::AbstractArray{U, 2},
+        vecs_sibling::AbstractArray{T, 3},
+        bvecs_parent::AbstractArray{T, 3},
+    ) where {T, U}
     C = reshape(B, size(bvecs_ii, 2), size(vecs_sibling, 1), :)
     @tullio bvecs_ii[l, p, k] = C[p, q, r] * bvecs_parent[l, r, k] * vecs_sibling[q, 1, k]
     return nothing
 end
 
 function VmulBmulBVp!(
-    bvecs_ii::AbstractArray{T,3},
-    vecs_sibling::AbstractArray{T,3},
-    B::AbstractArray{U,2},
-    bvecs_parent::AbstractArray{T,3},
-) where {T,U}
+        bvecs_ii::AbstractArray{T, 3},
+        vecs_sibling::AbstractArray{T, 3},
+        B::AbstractArray{U, 2},
+        bvecs_parent::AbstractArray{T, 3},
+    ) where {T, U}
     C = reshape(B, size(vecs_sibling, 1), size(bvecs_ii, 2), :)
     @tullio bvecs_ii[l, q, k] = C[p, q, r] * bvecs_parent[l, r, k] * vecs_sibling[p, 1, k]
     return nothing
@@ -482,11 +478,11 @@ end
 # This is the same as taking the derivative w.r.t. node [rep] and multiplying by dt[rep]
 # L0 is used to contract with tensor output
 function Update_Reverse_Product_Parts!(
-    DV::Tensor_Cache{T},
-    M::TensorManifold{field},
-    X;
-    ii,
-) where {field,T}
+        DV::Tensor_Cache{T},
+        M::TensorManifold{field},
+        X;
+        ii,
+    ) where {field, T}
     #     print("b=", ii, "/", length(X.x), "_")
     # find the parent and multiply with the Forward_Product from the other brancs and the becs fron the bottom
     if DV.Is_Valid_Reverse[ii]
@@ -495,7 +491,7 @@ function Update_Reverse_Product_Parts!(
     datalen = size(DV.Forward_Product[1], 3)
     if ii == 1
         DV.Reverse_Product[ii] = zeros(T, size(X.x[ii], 2), size(X.x[ii], 2), datalen)
-        for k = 1:size(X.x[ii], 2)
+        for k in 1:size(X.x[ii], 2)
             DV.Reverse_Product[ii][k, k, :] .= 1
         end
     else
@@ -549,10 +545,10 @@ end
 
 # if ii > 0  -> all children nodes get invalidate
 function Invalidate_Reverse(
-    DV::Tensor_Cache{T},
-    M::TensorManifold{field},
-    ii,
-) where {field,T}
+        DV::Tensor_Cache{T},
+        M::TensorManifold{field},
+        ii,
+    ) where {field, T}
     # the root is always the identity, no need to update
     if is_leaf(M, ii)
         # do nothing as it has no children
@@ -568,16 +564,16 @@ function Invalidate_Reverse(
 end
 
 function Update_Reverse_Product!(
-    DV::Tensor_Cache,
-    M::TensorManifold{field},
-    X,
-) where {field}
+        DV::Tensor_Cache,
+        M::TensorManifold{field},
+        X,
+    ) where {field}
     if size(DV.Forward_Product[1], 2) != 1
         println("only supports full contraction")
         return nothing
     end
     datalen = size(DV.Forward_Product[1], 3)
-    for ii = 1:nr_nodes(M)
+    for ii in 1:nr_nodes(M)
         Update_Reverse_Product_Parts!(DV, M, X, ii = ii)
     end
     return nothing
@@ -592,11 +588,11 @@ end
 
 # update the content which is invalidated
 function Update_Cache!(
-    DV::Tensor_Cache,
-    M::TensorManifold,
-    X,
-    Data::Vararg{AbstractMatrix{T}},
-) where {T}
+        DV::Tensor_Cache,
+        M::TensorManifold,
+        X,
+        Data::Vararg{AbstractMatrix{T}},
+    ) where {T}
     DV.Is_Valid_Forward .= false
     DV.Is_Valid_Reverse .= false
     Update_Forward_Product!(DV, M, X, Data..., ii = 1)
@@ -605,12 +601,12 @@ function Update_Cache!(
 end
 
 function Update_Cache_Parts!(
-    DV::Tensor_Cache,
-    M::TensorManifold,
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    ii,
-) where {T}
+        DV::Tensor_Cache,
+        M::TensorManifold,
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        ii,
+    ) where {T}
     Invalidate_Forward(DV, M, ii)
     Invalidate_Reverse(DV, M, ii)
     # make sure to update all the marked components
@@ -623,14 +619,14 @@ end
 
 # same as wDF, except that it only applies to node ii
 function L0_DF_parts!(
-    DF,
-    M::TensorManifold{field},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    L0,
-    ii::Integer = -1,
-    Cache = Make_Cache(M, X, Data...),
-) where {field,T}
+        DF,
+        M::TensorManifold{field},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        L0,
+        ii::Integer = -1,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field, T}
     #     t0 = time()
     if is_leaf(M, ii)
         dim = findfirst(isequal(ii), M.dim2ind)
@@ -641,7 +637,7 @@ function L0_DF_parts!(
         end
         dd = Data[wdim]
         bv = Cache.Reverse_Product[ii]
-        @tullio DF[p, q] = L0[l, k+0] * dd[p, k] * bv[l, q, k]
+        @tullio DF[p, q] = L0[l, k + 0] * dd[p, k] * bv[l, q, k]
     else
         # it is a node
         ch1 = Cache.Forward_Product[M.children[ii, 1]]
@@ -649,7 +645,7 @@ function L0_DF_parts!(
         bv = Cache.Reverse_Product[ii]
         XOp = reshape(DF, size(ch1, 1), size(ch2, 1), size(DF, 2))
         #         @show size(L0), size(bv), size(XOp)
-        @tullio XOp[p, q, r] = L0[l, k+0] * ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k]
+        @tullio XOp[p, q, r] = L0[l, k + 0] * ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k]
     end
     #     t1 = time()
     #     println("\n -> L0_DF = ", 100*(t1-t0))
@@ -721,16 +717,16 @@ end
 # end
 # this multiplies the matrix valued L0 from the right side using
 function L0_DF_DF_Delta_parts!(
-    DF,
-    Delta,
-    Latent_Delta,
-    M::TensorManifold{field},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    Scaling,
-    ii::Integer = -1,
-    Cache = Make_Cache(M, X, Data...),
-) where {field,T}
+        DF,
+        Delta,
+        Latent_Delta,
+        M::TensorManifold{field},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        Scaling,
+        ii::Integer = -1,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field, T}
     #     t0 = time()
     if is_leaf(M, ii)
         dim = findfirst(isequal(ii), M.dim2ind)
@@ -772,13 +768,13 @@ end
 
 # same as wDF, except that it only applies to node ii
 function L0_DF_parts(
-    M::TensorManifold{field},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    L0,
-    ii::Integer = -1,
-    Cache = Make_Cache(M, X, Data...),
-) where {field,T}
+        M::TensorManifold{field},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        L0,
+        ii::Integer = -1,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field, T}
     #     t0 = time()
     if is_leaf(M, ii)
         dim = findfirst(isequal(ii), M.dim2ind)
@@ -789,13 +785,13 @@ function L0_DF_parts(
         end
         dd = Data[wdim]
         bv = Cache.Reverse_Product[ii]
-        @tullio XO[p, q] := L0[l, k+0] * dd[p, k] * bv[l, q, k]
+        @tullio XO[p, q] := L0[l, k + 0] * dd[p, k] * bv[l, q, k]
     else
         # it is a node
         ch1 = Cache.Forward_Product[M.children[ii, 1]]
         ch2 = Cache.Forward_Product[M.children[ii, 2]]
         bv = Cache.Reverse_Product[ii]
-        @tullio XOp[p, q, r] := L0[l, k+0] * ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k]
+        @tullio XOp[p, q, r] := L0[l, k + 0] * ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k]
         XO = reshape(XOp, :, size(XOp, 3))
     end
     #     t1 = time()
@@ -804,12 +800,12 @@ function L0_DF_parts(
 end
 
 function L0_DF(
-    M::TensorManifold{field},
-    X,
-    Data::Vararg{AbstractMatrix{T}};
-    L0,
-    Cache = Make_Cache(M, X, Data...),
-) where {field,T}
+        M::TensorManifold{field},
+        X,
+        Data::Vararg{AbstractMatrix{T}};
+        L0,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field, T}
     #     @show Tuple(collect(1:length(M.M.manifolds)))
     # @show size(Data[1]), size(L0), size(Cache.Reverse_Product)
     return ArrayPartition(
@@ -843,13 +839,13 @@ end
 # instead of multiplying the gradient from the left, we are multiplying it from the right
 # there is no contraction along the indices of Data...
 function DF_dt_parts(
-    M::TensorManifold{field},
-    X,
-    Data...;
-    dt,
-    ii,
-    Cache = Make_Cache(M, X, Data...),
-) where {field}
+        M::TensorManifold{field},
+        X,
+        Data...;
+        dt,
+        ii,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field}
     if is_leaf(M, ii)
         dim = findfirst(isequal(ii), M.dim2ind)
         if dim > length(Data)
@@ -861,7 +857,7 @@ function DF_dt_parts(
         bv = Cache.Reverse_Product[ii]
         # should be made non-allocating
         XO = zeros(eltype(dt), size(bv, 1), size(bv, 3))
-        @tullio XO[l, k] = bv[l, q, k] * l_data[p, k+0] * dt[p, q]
+        @tullio XO[l, k] = bv[l, q, k] * l_data[p, k + 0] * dt[p, q]
     else
         s_l = size(X.x[M.children[ii, 1]], 2)
         s_r = size(X.x[M.children[ii, 2]], 2)
@@ -871,19 +867,19 @@ function DF_dt_parts(
         bv = Cache.Reverse_Product[ii]
         # should be made non-allocating
         XO = zeros(eltype(dtp), size(bv, 1), size(bv, 3))
-        @tullio XO[l, k] = ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k+0] * dtp[p, q, r]
+        @tullio XO[l, k] = ch1[p, 1, k] * ch2[q, 1, k] * bv[l, r, k + 0] * dtp[p, q, r]
     end
     #     @show size(Data), size(dt), size(XO)
     return XO
 end
 
 function DF_dt(
-    M::TensorManifold{field},
-    X,
-    Data...;
-    dt,
-    Cache = Make_Cache(M, X, Data...),
-) where {field}
+        M::TensorManifold{field},
+        X,
+        Data...;
+        dt,
+        Cache = Make_Cache(M, X, Data...),
+    ) where {field}
     return ArrayPartition(
         map(
             (x, y) -> DF_dt_parts(M, X, Data..., dt = y, ii = x, Cache = Cache),
@@ -895,14 +891,14 @@ end
 
 # only with respect to the last element of Data
 function Jacobian_Add!(
-    Jac,
-    M::TensorManifold{field},
-    X,
-    Data...;
-    dim,
-    Cache = Make_Cache(M, X, Data...),
-    Lambda = 1,
-) where {field}
+        Jac,
+        M::TensorManifold{field},
+        X,
+        Data...;
+        dim,
+        Cache = Make_Cache(M, X, Data...),
+        Lambda = 1,
+    ) where {field}
     ii = M.dim2ind[dim]
     bv = Cache.Reverse_Product[ii]
     leaf = X.x[ii]

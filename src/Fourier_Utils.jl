@@ -1,6 +1,4 @@
-# function getgrid(n::Integer)
-#     return range(0.0, 4 * n * pi / (2 * n + 1), length = 2 * n + 1)
-# end
+# SPDX-License-Identifier: EUPL-1.2
 
 # the interpolation function
 function psi(theta, np)
@@ -102,7 +100,7 @@ end
 Evaluates the set of Dirichlet kernels specific to the uniform `grid` at all points in `theta`.
 The result is a matrix, where each column corresponds to a value in `theta`.
 """
-function Fourier_Interpolate(grid, theta::AbstractArray{T,1}) where {T}
+function Fourier_Interpolate(grid, theta::AbstractArray{T, 1}) where {T}
     W = zeros(T, length(grid), length(theta))
     psi2 = (x) -> psi(x, length(grid))
     for k in eachindex(theta)
@@ -168,6 +166,6 @@ function FourierMatrix(grid)
     fourier_order = div(length(grid) - 1, 2)
     @assert length(grid) == 2 * fourier_order + 1 "Incorrect grid size"
     tr =
-        [exp(-k * 1im * grid[l]) for k = (-fourier_order):fourier_order, l = 1:length(grid)]
+        [exp(-k * 1im * grid[l]) for k in (-fourier_order):fourier_order, l in 1:length(grid)]
     return tr
 end

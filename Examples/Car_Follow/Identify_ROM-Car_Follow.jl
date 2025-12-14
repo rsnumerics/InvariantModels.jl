@@ -72,6 +72,8 @@ end
 Name = "Car_Follow"
 VER = "Autonomous"
 DATAVER = "Autonomous"
+# VER = "Forced"
+# DATAVER = "Forced"
 Generate = true
 Process = true
 
@@ -101,38 +103,44 @@ Parameters = (
 Time_Step = 2 * pi / 17 / Omega_ODE
 
 if Generate
-    AA = randn(9, Training_Trajectories)
-    IC_x_Train =
-        0.4 * # 0.3 for forced, 0.4 for autonomous
-        AA *
-        diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
-        diagm(0.4 .+ 0.7 .* rand(size(AA, 2)))
-    AA = randn(9, Testing_Trajectories)
-    IC_x_Test =
-        0.95 *
-        0.4 * # 0.3 for forced, 0.4 for autonomous
-        AA *
-        diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
-        diagm(0.4 .+ 0.7 .* rand(size(AA, 2)))
+#     AA = randn(9, Training_Trajectories)
+#     IC_x_Train =
+#         0.4 * # 0.3 for forced, 0.4 for autonomous
+#         AA *
+#         diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
+#         diagm(0.4 .+ 0.7 .* rand(size(AA, 2)))
+#     AA = randn(9, Testing_Trajectories)
+#     IC_x_Test =
+#         0.95 *
+#         0.4 * # 0.3 for forced, 0.4 for autonomous
+#         AA *
+#         diagm(1 ./ sqrt.(vec(sum(AA .^ 2, dims = 1)))) *
+#         diagm(0.4 .+ 0.7 .* rand(size(AA, 2)))
+#
+#     function Random_Phase(Skew_Dimension, Trajectories)
+#         IC_Alpha = zeros(Skew_Dimension, Trajectories)
+#         if Skew_Dimension >= Trajectories
+#             Start_Phase = randperm(Skew_Dimension)[1:Trajectories]
+#         else
+#             Start_Phase = vcat(
+#                 repeat(randperm(Skew_Dimension), div(Trajectories, Skew_Dimension)),
+#                 randperm(Skew_Dimension)[1:mod(Trajectories, Skew_Dimension)],
+#             )
+#         end
+#         for k in eachindex(Start_Phase)
+#             IC_Alpha[Start_Phase[k], k] = 1
+#         end
+#         return IC_Alpha
+#     end
+#
+#     IC_Alpha_Train = Random_Phase(Skew_Dimension, Training_Trajectories)
+#     IC_Alpha_Test = Random_Phase(Skew_Dimension, Testing_Trajectories)
 
-    function Random_Phase(Skew_Dimension, Trajectories)
-        IC_Alpha = zeros(Skew_Dimension, Trajectories)
-        if Skew_Dimension >= Trajectories
-            Start_Phase = randperm(Skew_Dimension)[1:Trajectories]
-        else
-            Start_Phase = vcat(
-                repeat(randperm(Skew_Dimension), div(Trajectories, Skew_Dimension)),
-                randperm(Skew_Dimension)[1:mod(Trajectories, Skew_Dimension)],
-            )
-        end
-        for k in eachindex(Start_Phase)
-            IC_Alpha[Start_Phase[k], k] = 1
-        end
-        return IC_Alpha
-    end
-
-    IC_Alpha_Train = Random_Phase(Skew_Dimension, Training_Trajectories)
-    IC_Alpha_Test = Random_Phase(Skew_Dimension, Testing_Trajectories)
+    IC_Dict = JLSO.load("ICS-$(Name)-$(DATAVER).bson")
+    IC_x_Train = IC_Dict[:IC_x_Train]
+    IC_x_Test = IC_Dict[:IC_x_Test]
+    IC_Alpha_Train = IC_Dict[:IC_Alpha_Train]
+    IC_Alpha_Test = IC_Dict[:IC_Alpha_Test]
 
     IC_Force = [0.0]
     List_of_Data, List_of_Phases = Generate_From_ODE(
@@ -157,16 +165,16 @@ if Generate
         IC_Alpha_Test,
         ones(Int, Testing_Trajectories) * Trajectory_Length,
     )
-    @show "RAWDATA-$(Name)-$(DATAVER).bson"
-    JLSO.save(
-        "RAWDATA-$(Name)-$(DATAVER).bson",
-        :Parameters         => Parameters,
-        :Time_Step          => Time_Step,
-        :List_of_Data       => List_of_Data,
-        :List_of_Phases     => List_of_Phases,
-        :List_of_Data_T     => List_of_Data_T,
-        :List_of_Phases_T   => List_of_Phases_T,
-    )
+#     @show "RAWDATA-$(Name)-$(DATAVER).bson"
+#     JLSO.save(
+#         "RAWDATA-$(Name)-$(DATAVER).bson",
+#         :Parameters         => Parameters,
+#         :Time_Step          => Time_Step,
+#         :List_of_Data       => List_of_Data,
+#         :List_of_Phases     => List_of_Phases,
+#         :List_of_Data_T     => List_of_Data_T,
+#         :List_of_Phases_T   => List_of_Phases_T,
+#     )
 else
     data = JLSO.load("RAWDATA-$(Name)-$(DATAVER).bson")
     Parameters          = data[:Parameters]
@@ -175,6 +183,13 @@ else
     List_of_Phases      = data[:List_of_Phases]
     List_of_Data_T      = data[:List_of_Data_T]
     List_of_Phases_T    = data[:List_of_Phases_T]
+
+    # making it reproducible
+#     IC_x_Train = hcat([da[:,1] for da in data[:List_of_Data]]...)
+#     IC_x_Test = hcat([da[:,1] for da in data[:List_of_Data_T]]...)
+#     IC_Alpha_Train = hcat([da[:,1] for da in data[:List_of_Phases]]...)
+#     IC_Alpha_Test = hcat([da[:,1] for da in data[:List_of_Phases_T]]...)
+#     JLSO.save("ICS-$(Name)-$(DATAVER).bson", :IC_x_Train => IC_x_Train, :IC_x_Test => IC_x_Test, :IC_Alpha_Train => IC_Alpha_Train, :IC_Alpha_Test => IC_Alpha_Test, format = :bson, compression = :none)
 end
 
 if Process
@@ -202,6 +217,7 @@ if Process
         Time_Step=Time_Step,
         Reduce=true,
         Align=true,
+        By_Eigen=true,
     )
     Data_Decomp, _ = Decompose_Data(Index_List, Data, Encoded_Phase, Steady_State, SH, Decomp.Data_Encoder)
     Data_Decomp_T, _ = Decompose_Data(Index_List_T, Data_T, Encoded_Phase_T, Steady_State, SH, Decomp.Data_Encoder)
