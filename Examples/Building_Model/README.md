@@ -6,7 +6,7 @@ Printed patterns were attached to the sides of the floor for motion tracking usi
 
 The experimental data was collected in the Dynamics Lab of the University of Bristol. Two Allied Vision [Alvium 1800 U-052](https://www.alliedvision.com/en/products/alvium-configurator/alvium-1800-u/052/) USB cameras with 8mm lenses were synchronised. One camera captured the top two floors of the structure, the second camera captured the bottom floor. Each floor was hit with a soft hammer three times adding up to nine recorded videos. Six of the videos were used for training and three of the videos were kept for testing. The videos were recorded at 384 fps and the motion then was process into three horizontal displacements signal. Delay embedding of length 32 was used to reconstruct the state space and then the first 10 linear dynamic modes were extracted from the data. Manual inspection reveals that the rest of the dynamic modes consist mainly of noise.
 
-Altogether four two-dimensional invariant foliations could be extracted from the data. For all of them the training trajectories and model predictions match well. It is visible that the slight difference is mostly noise.
+Altogether four two-dimensional invariant foliations could be extracted from the data. For all of them the testing trajectories and model predictions match well. It is visible that the slight difference is mostly noise.
     
 The nonlinearity of the structure is both geometrical and frictional. As with any friction joints the backbone curves are irregular at high amplitudes, where there is significant relative motion between joining surfaces. In this case the dynamics is surprisingly repeatable, give the accuracy demonstrated on the testing data.
 ## Mode 1
