@@ -18,11 +18,12 @@ The key concept behind methods implemented here is invariance. The following met
 
 The theory and background on invariant foliations are described in the following papers:
 
-  1. *R. Szalai.* Non-resonant invariant foliations of quasi-periodically forced systems, *[preprint](https://arxiv.org/abs/2403.14771)*, 2024
-  2. *R. Szalai*, Data-Driven Reduced Order Models Using Invariant Foliations, Manifolds and Autoencoders, J Nonlinear Sci 33, 75 (2023). [link](https://doi.org/10.1007/s00332-023-09932-y)
-  3. *R. Szalai*, Invariant spectral foliations with applications to model order reduction and synthesis. Nonlinear Dyn 101, 2645–2669 (2020). [link](https://doi.org/10.1007/s11071-020-05891-1)
+  1. *R. Szalai*, Data-driven modelling of autonomous and forced dynamical systems *[preprint](https://arxiv.org/abs/2512.12432)*, 2025
+  2. *R. Szalai*, Non-resonant invariant foliations of quasi-periodically forced systems, *[preprint](https://arxiv.org/abs/2403.14771)*, 2024
+  3. *R. Szalai*, Data-Driven Reduced Order Models Using Invariant Foliations, Manifolds and Autoencoders, J Nonlinear Sci 33, 75 (2023). [link](https://doi.org/10.1007/s00332-023-09932-y)
+  4. *R. Szalai*, Invariant spectral foliations with applications to model order reduction and synthesis. Nonlinear Dyn 101, 2645–2669 (2020). [link](https://doi.org/10.1007/s11071-020-05891-1)
  
-Paper [3] introduced the idea of using invariant foliations for reduced order modelling, paper [2] has shown that only invariant foliations can be used for genuine data-driven reduced order modelling (when we classify all possible methods into: a) autoencoders, b) invariant foliations, c) invariant manifolds, d) equation-free models.
+Paper [4] introduced the idea of using invariant foliations for reduced order modelling, paper [3] has shown that only invariant foliations can be used for genuine data-driven reduced order modelling (when we classify all possible methods into: a) autoencoders, b) invariant foliations, c) invariant manifolds, d) equation-free models. Paper [1] makes the method widely applicable and forms the basis of this software.
 
 There are a number of examples
 
