@@ -85,8 +85,8 @@ Steady_State, Linear_Model, SH = Estimate_Linear_Model(
     Iterations = 0,
     Order = 1,
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(Admissible, Tensor_Admissible, Tensor_Linear_Indices, Tensor_Constant_Indices) = (1:4, 1:4, 2:4, 1:1)
-  0.000080 seconds
-  1.783745 seconds (2.37 M allocations: 114.117 MiB, 99.94% compilation time)</code></pre><p>If the model is forced it can be a good idea to filter the linear model so that it does not contain the high frequency content of the noise. The foloowing line has no effect for autonomous systems, only included for completeness. Documentation is at <a href="../#InvariantModels.Filter_Linear_Model"><code>Filter_Linear_Model</code></a>.</p><pre><code class="language-julia hljs"># filtering up to 2 harmonics
+  0.000082 seconds
+  1.828191 seconds (2.37 M allocations: 114.119 MiB, 2.90% gc time, 99.93% compilation time)</code></pre><p>If the model is forced it can be a good idea to filter the linear model so that it does not contain the high frequency content of the noise. The foloowing line has no effect for autonomous systems, only included for completeness. Documentation is at <a href="../#InvariantModels.Filter_Linear_Model"><code>Filter_Linear_Model</code></a>.</p><pre><code class="language-julia hljs"># filtering up to 2 harmonics
 Linear_Model_Filtered = Filter_Linear_Model(Linear_Model, Forcing_Grid, 1)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">norm(BB - BB_Filtered) = 0.0</code></pre><p>Calculating the invariant vector bundles of the linear model, using the eigenvalues and eigenvectors of the transfer operator, see <a href="../#InvariantModels.Create_Linear_Decomposition"><code>Create_Linear_Decomposition</code></a>.  This creates tranformations that will bring the data into a coordinate system where the linear model is approximately block diagonal.</p><pre><code class="language-julia hljs">Decomp = Create_Linear_Decomposition(
     Linear_Model_Filtered,
     SH;
@@ -163,7 +163,7 @@ Setting up model 2.
 (size(((XTF.x[k]).x[2]).x[2]), size(view(Reduced_Encoder, Selection[k], :, :))) = ((3, 1, 1), (1, 1, 3))
 Find_Torus: residual = 0.0 resolved = [3] of 3 with rtol = 0.0625 vs 1.0
 (maximum(Scaling), minimum(Scaling)) = (7.9999929684215685, 1.0220770745414887)
-  0.000175 seconds
+  0.000173 seconds
 (size(BB), size(X.x[Part_WW])) = ((2, 1, 9), (2, 1, 9))
 mx = maximum(abs.(ev)) = 0.9975054150025571
 size(BB_Jac) = (2, 2, 1, 9, 2)
@@ -171,36 +171,36 @@ Optimising Model!
 -&gt;    Step=0 | Model=1 | -&gt; 1. time = 3.8[s] F(x) = 1.90609e+01 G(x) = 2.39697e+04 R = 5.00000e-01
 -&gt;    Step=0 | Model=1 | -&gt; 2. time = 4.6[s] F(x) = 3.33399e+00 G(x) = 1.05636e+04 R = 2.50000e-01
 -&gt;    Step=0 | Model=1 | -&gt; 3. time = 5.4[s] F(x) = 7.39256e-01 G(x) = 4.70992e+03 R = 1.25000e-01
--&gt;    Step=0 | Model=1 | -&gt; 4. time = 6.1[s] F(x) = 9.59554e-02 G(x) = 4.19500e+03 R = 6.25000e-02
+-&gt;    Step=0 | Model=1 | -&gt; 4. time = 6.2[s] F(x) = 9.59554e-02 G(x) = 4.19500e+03 R = 6.25000e-02
 -&gt;    Step=0 | Model=1 | -&gt; 5. time = 6.9[s] F(x) = 3.83554e-02 G(x) = 6.08946e+01 R = 3.12500e-02
--&gt;    Step=0 | Model=1 | -&gt; 6. time = 7.6[s] F(x) = 1.13083e-02 G(x) = 7.09928e+01 R = 1.56250e-02
--&gt;    Step=0 | Model=1 | -&gt; 7. time = 8.4[s] F(x) = 4.41318e-03 G(x) = 1.69865e+02 R = 7.81250e-03
--&gt;    Step=0 | Model=1 | -&gt; 8. time = 9.1[s] F(x) = 3.57266e-04 G(x) = 2.69537e+02 R = 3.90625e-03
--&gt;    Step=0 | Model=1 | -&gt; 9. time = 9.9[s] F(x) = 5.10780e-05 G(x) = 7.23720e+01 R = 1.95312e-03
--&gt;    Step=0 | Model=1 | -&gt; 10. time = 10.7[s] F(x) = 4.27316e-05 G(x) = 1.04861e+01 R = 9.76562e-04
--&gt;    Step=0 | Model=1 | -&gt; 11. time = 11.4[s] F(x) = 4.22080e-05 G(x) = 6.88567e-01 R = 6.90534e-04
--&gt;    Step=0 | Model=1 | -&gt; 12. time = 12.2[s] F(x) = 4.15731e-05 G(x) = 1.62321e-02 R = 4.88281e-04
--&gt;    Step=0 | Model=1 | -&gt; 13. time = 12.9[s] F(x) = 4.06968e-05 G(x) = 9.10525e-03 R = 3.45267e-04
--&gt;    Step=0 | Model=1 | -&gt; 14. time = 13.7[s] F(x) = 3.94983e-05 G(x) = 1.16430e-02 R = 2.44141e-04
--&gt;    Step=0 | Model=1 | -&gt; 15. time = 14.4[s] F(x) = 3.78803e-05 G(x) = 1.79666e-02 R = 1.72633e-04
--&gt;    Step=0 | Model=1 | -&gt; 16. time = 15.2[s] F(x) = 3.57343e-05 G(x) = 3.11161e-02 R = 1.22070e-04
--&gt;    Step=0 | Model=1 | -&gt; 17. time = 16.0[s] F(x) = 3.29559e-05 G(x) = 5.57454e-02 R = 8.63167e-05
--&gt;    Step=0 | Model=1 | -&gt; 18. time = 16.7[s] F(x) = 2.94753e-05 G(x) = 9.89412e-02 R = 6.10352e-05
--&gt;    Step=0 | Model=1 | -&gt; 19. time = 17.5[s] F(x) = 2.53037e-05 G(x) = 1.70097e-01 R = 3.05176e-05
--&gt;    Step=0 | Model=1 | -&gt; 20. time = 18.2[s] F(x) = 1.90780e-05 G(x) = 2.78420e-01 R = 1.52588e-05
--&gt;    Step=0 | Model=1 | -&gt; 21. time = 19.0[s] F(x) = 1.17062e-05 G(x) = 7.71692e-01 R = 7.62939e-06
--&gt;    Step=0 | Model=1 | -&gt; 22. time = 19.7[s] F(x) = 5.57968e-06 G(x) = 1.63199e+00 R = 3.81470e-06
--&gt;    Step=0 | Model=1 | -&gt; 23. time = 20.5[s] F(x) = 2.41556e-06 G(x) = 2.28571e+00 R = 1.90735e-06
--&gt;    Step=0 | Model=1 | -&gt; 24. time = 21.3[s] F(x) = 1.56081e-06 G(x) = 1.77067e+00 R = 9.53674e-07
--&gt;    Step=0 | Model=1 | -&gt; 25. time = 22.0[s] F(x) = 1.47243e-06 G(x) = 6.12561e-01 R = 6.74350e-07
--&gt;    Step=0 | Model=1 | -&gt; 26. time = 22.8[s] F(x) = 1.46958e-06 G(x) = 7.79356e-02 R = 4.76837e-07
--&gt;    Step=0 | Model=1 | -&gt; 27. time = 23.5[s] F(x) = 1.46953e-06 G(x) = 3.00478e-03 R = 3.37175e-07
--&gt;    Step=0 | Model=1 | -&gt; 28. time = 24.3[s] F(x) = 1.46953e-06 G(x) = 6.68393e-05 R = 2.38419e-07
--&gt;    Step=0 | Model=1 | -&gt; 29. time = 25.1[s] F(x) = 1.46953e-06 G(x) = 8.63859e-07 R = 1.68587e-07
--&gt;    Step=0 | Model=1 | -&gt; 30. time = 25.8[s] F(x) = 1.46953e-06 G(x) = 8.61445e-09 R = 1.19209e-07
--&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=1 | -&gt; 31. time = 26.6[s] F(x) = 1.46953e-06 G(x) = 4.68222e-10 R = 6.74350e-07
--&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=1 | -&gt; 32. time = 27.4[s] F(x) = 1.46953e-06 G(x) = 2.52996e-10 R = 9.05097e+01
-  0.000014 seconds
+-&gt;    Step=0 | Model=1 | -&gt; 6. time = 7.7[s] F(x) = 1.13083e-02 G(x) = 7.09928e+01 R = 1.56250e-02
+-&gt;    Step=0 | Model=1 | -&gt; 7. time = 8.5[s] F(x) = 4.41318e-03 G(x) = 1.69865e+02 R = 7.81250e-03
+-&gt;    Step=0 | Model=1 | -&gt; 8. time = 9.3[s] F(x) = 3.57266e-04 G(x) = 2.69537e+02 R = 3.90625e-03
+-&gt;    Step=0 | Model=1 | -&gt; 9. time = 10.0[s] F(x) = 5.10780e-05 G(x) = 7.23720e+01 R = 1.95312e-03
+-&gt;    Step=0 | Model=1 | -&gt; 10. time = 10.8[s] F(x) = 4.27316e-05 G(x) = 1.04861e+01 R = 9.76562e-04
+-&gt;    Step=0 | Model=1 | -&gt; 11. time = 11.6[s] F(x) = 4.22080e-05 G(x) = 6.88567e-01 R = 6.90534e-04
+-&gt;    Step=0 | Model=1 | -&gt; 12. time = 12.3[s] F(x) = 4.15731e-05 G(x) = 1.62321e-02 R = 4.88281e-04
+-&gt;    Step=0 | Model=1 | -&gt; 13. time = 13.1[s] F(x) = 4.06968e-05 G(x) = 9.10525e-03 R = 3.45267e-04
+-&gt;    Step=0 | Model=1 | -&gt; 14. time = 13.9[s] F(x) = 3.94983e-05 G(x) = 1.16430e-02 R = 2.44141e-04
+-&gt;    Step=0 | Model=1 | -&gt; 15. time = 14.6[s] F(x) = 3.78803e-05 G(x) = 1.79666e-02 R = 1.72633e-04
+-&gt;    Step=0 | Model=1 | -&gt; 16. time = 15.4[s] F(x) = 3.57343e-05 G(x) = 3.11161e-02 R = 1.22070e-04
+-&gt;    Step=0 | Model=1 | -&gt; 17. time = 16.2[s] F(x) = 3.29559e-05 G(x) = 5.57454e-02 R = 8.63167e-05
+-&gt;    Step=0 | Model=1 | -&gt; 18. time = 17.0[s] F(x) = 2.94753e-05 G(x) = 9.89412e-02 R = 6.10352e-05
+-&gt;    Step=0 | Model=1 | -&gt; 19. time = 17.7[s] F(x) = 2.53037e-05 G(x) = 1.70097e-01 R = 3.05176e-05
+-&gt;    Step=0 | Model=1 | -&gt; 20. time = 18.5[s] F(x) = 1.90780e-05 G(x) = 2.78420e-01 R = 1.52588e-05
+-&gt;    Step=0 | Model=1 | -&gt; 21. time = 19.3[s] F(x) = 1.17062e-05 G(x) = 7.71692e-01 R = 7.62939e-06
+-&gt;    Step=0 | Model=1 | -&gt; 22. time = 20.1[s] F(x) = 5.57968e-06 G(x) = 1.63199e+00 R = 3.81470e-06
+-&gt;    Step=0 | Model=1 | -&gt; 23. time = 20.8[s] F(x) = 2.41556e-06 G(x) = 2.28571e+00 R = 1.90735e-06
+-&gt;    Step=0 | Model=1 | -&gt; 24. time = 21.6[s] F(x) = 1.56081e-06 G(x) = 1.77067e+00 R = 9.53674e-07
+-&gt;    Step=0 | Model=1 | -&gt; 25. time = 22.4[s] F(x) = 1.47243e-06 G(x) = 6.12561e-01 R = 6.74350e-07
+-&gt;    Step=0 | Model=1 | -&gt; 26. time = 23.1[s] F(x) = 1.46958e-06 G(x) = 7.79356e-02 R = 4.76837e-07
+-&gt;    Step=0 | Model=1 | -&gt; 27. time = 23.9[s] F(x) = 1.46953e-06 G(x) = 3.00478e-03 R = 3.37175e-07
+-&gt;    Step=0 | Model=1 | -&gt; 28. time = 24.7[s] F(x) = 1.46953e-06 G(x) = 6.68393e-05 R = 2.38419e-07
+-&gt;    Step=0 | Model=1 | -&gt; 29. time = 25.4[s] F(x) = 1.46953e-06 G(x) = 8.63859e-07 R = 1.68587e-07
+-&gt;    Step=0 | Model=1 | -&gt; 30. time = 26.2[s] F(x) = 1.46953e-06 G(x) = 8.61445e-09 R = 1.19209e-07
+-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=1 | -&gt; 31. time = 27.0[s] F(x) = 1.46953e-06 G(x) = 4.68222e-10 R = 6.74350e-07
+-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=1 | -&gt; 32. time = 27.8[s] F(x) = 1.46953e-06 G(x) = 2.52996e-10 R = 9.05097e+01
+  0.000013 seconds
 (size(BB), size(X.x[Part_WW])) = ((1, 1, 1), (1, 1, 1))
 mx = maximum(abs.(ev)) = 0.9950124803896986
 size(BB_Jac) = (1, 1, 1, 1, 2)
@@ -213,8 +213,8 @@ Optimising Model!
 -&gt;    Step=0 | Model=2 | -&gt; 6. time = 5.0[s] F(x) = 1.69478e-20 G(x) = 2.32041e-09 R = 6.25000e-02
 -&gt;    Step=0 | Model=2 | -&gt; 7. time = 5.7[s] F(x) = 1.69471e-20 G(x) = 6.91247e-10 R = 4.41942e-02
 -&gt;    Step=0 | Model=2 | -&gt; 8. time = 6.5[s] F(x) = 1.69470e-20 G(x) = 1.51188e-10 R = 3.12500e-02
--&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=2 | -&gt; 9. time = 7.2[s] F(x) = 1.69470e-20 G(x) = 3.82337e-11 R = 8.83883e-02
--&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=2 | -&gt; 10. time = 8.0[s] F(x) = 1.69470e-20 G(x) = 7.10917e-11 R = 3.20000e+01</code></pre><p>Setting up the data structures for the testing data.  This is necessary, because <code>MTFP</code> includes estimates of initial conditions for latent trajectories, which are differentr for the testing data. The estimates of initial conditions for latent trajectories must be updated before calculating the testing error.  Documentation is at <a href="../#InvariantModels.Multi_Foliation_Test_Problem"><code>Multi_Foliation_Test_Problem</code></a>.</p><pre><code class="language-julia hljs">MTFP_Test = Multi_Foliation_Test_Problem(
+-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=2 | -&gt; 9. time = 7.3[s] F(x) = 1.69470e-20 G(x) = 3.82337e-11 R = 8.83883e-02
+-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=0 | Model=2 | -&gt; 10. time = 8.1[s] F(x) = 1.69470e-20 G(x) = 7.10917e-11 R = 3.20000e+01</code></pre><p>Setting up the data structures for the testing data.  This is necessary, because <code>MTFP</code> includes estimates of initial conditions for latent trajectories, which are differentr for the testing data. The estimates of initial conditions for latent trajectories must be updated before calculating the testing error.  Documentation is at <a href="../#InvariantModels.Multi_Foliation_Test_Problem"><code>Multi_Foliation_Test_Problem</code></a>.</p><pre><code class="language-julia hljs">MTFP_Test = Multi_Foliation_Test_Problem(
     MTFP,
     Index_List_T,
     Data_Decomp_T,
@@ -223,13 +223,13 @@ Optimising Model!
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Find_Torus: residual = 0.0 resolved = [3] of 3 with rtol = 0.0625 vs 1.0
 (maximum(Scaling), minimum(Scaling)) = (7.999972165837309, 0.9531002080487756)
 Optimising Initial Conditions!
-M=0. 1. [1-480] Model IC -&gt; 11. time = 3.5[s] F(x) = 7.59985e-04 G(x) = 5.30125e-10 R = 5.98665e+01
+M=0. 1. [1-480] Model IC -&gt; 11. time = 3.4[s] F(x) = 7.59985e-04 G(x) = 5.30125e-10 R = 5.98665e+01
 M=0. 2. [481-960] Model IC -&gt; 9. time = 0.0[s] F(x) = 2.18447e-07 G(x) = 1.64293e-10 R = 5.41850e+03
 M=0. 3. [961-1440] Model IC -&gt; 6. time = 0.0[s] F(x) = 1.88633e-07 G(x) = 4.19428e-10 R = 3.06517e+04
 M=0. 4. [1441-1920] Model IC -&gt; 8. time = 0.0[s] F(x) = 5.85565e-08 G(x) = 1.16884e-12 R = 3.38656e+02
 M=0. 5. [1921-2400] Model IC -&gt; 9. time = 0.0[s] F(x) = 4.24112e-08 G(x) = 1.86577e-14 R = 6.77312e+02
 Optimising Initial Conditions!
-M=0. 1. [1-480] Model IC -&gt; 32. time = 1.0[s] F(x) = 8.63498e-20 G(x) = 1.39267e-14 R = 2.44949e+00
+M=0. 1. [1-480] Model IC -&gt; 32. time = 0.9[s] F(x) = 8.63498e-20 G(x) = 1.39267e-14 R = 2.44949e+00
 M=0. 2. [481-960] Model IC -&gt; 4. time = 0.0[s] F(x) = 8.19937e-21 G(x) = 1.38196e-13 R = 1.56767e+02
 M=0. 3. [961-1440] Model IC -&gt; 32. time = 0.1[s] F(x) = 3.18023e-21 G(x) = 1.82229e-16 R = 1.08253e-01
 M=0. 4. [1441-1920] Model IC -&gt; 32. time = 0.1[s] F(x) = 1.38914e-21 G(x) = 7.80854e-17 R = 4.89898e+00
@@ -242,7 +242,7 @@ M=0. 5. [1921-2400] Model IC -&gt; 6. time = 0.0[s] F(x) = 1.19971e-21 G(x) = 2.
     Gradient_Ratio = 2^(-7),
     Gradient_Stop = 2^(-29),
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Multi_Foliation : zero()
-|g-&gt;-&gt;    Step=1 | Model=1 | -&gt; 1. time = 0.9[s] F(x) = 1.46953e-06 G(x) = 4.12123e-10 R = 1.00000e+00
+|g-&gt;-&gt;    Step=1 | Model=1 | -&gt; 1. time = 0.8[s] F(x) = 1.46953e-06 G(x) = 4.12123e-10 R = 1.00000e+00
 -&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=1 | Model=1 | -&gt; 2. time = 1.6[s] F(x) = 1.46953e-06 G(x) = 2.37275e-10 R = 1.44815e+03
 |m=6.89404e-02|Updating Test Error (1,)
 M=1. 1. [1-480] Model IC -&gt; 4. time = 0.0[s] F(x) = 7.59985e-04 G(x) = 3.90862e-10 R = 8.19200e+03
@@ -262,9 +262,9 @@ Torus=0.0
 (maximum(Scaling), minimum(Scaling)) = (7.9999929684215685, 1.0220770745414887)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972165837309, 0.9531002080487756)
-GC live:     610.041 MiB
-JIT:          12.876 MiB
-Max. RSS:   2196.355 MiB
+GC live:     609.888 MiB
+JIT:          12.840 MiB
+Max. RSS:   2169.578 MiB
     Step=2 | Foil=1 | O=(2, 1) -&gt; 0. time = 4.5[s] F(x) = 1.46953e-06 G(x) = 6.89404e-02 R = 7.07107e-01 
 H[1]    Step=2 | Foil=1 | O=(2, 1) -&gt; 1. time = 5.9[s] F(x) = 1.31835e-06 G(x) = 6.89404e-02 R = 7.07107e-01 
 H[1]    Step=2 | Foil=1 | O=(2, 1) -&gt; 2. time = 6.7[s] F(x) = 1.31835e-06 G(x) = 7.14846e-15 R = 7.07107e-01 
@@ -278,9 +278,9 @@ Torus=4.385722316544613e-6
 (maximum(Scaling), minimum(Scaling)) = (7.999993010770878, 1.022076922892097)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972286948352, 0.9531000484123286)
-GC live:     179.598 MiB
-JIT:          14.201 MiB
-Max. RSS:   2196.355 MiB
+GC live:     179.436 MiB
+JIT:          14.165 MiB
+Max. RSS:   2169.578 MiB
     Step=3 | Foil=1 | O=(2, 2) -&gt; 0. time = 4.2[s] F(x) = 1.31835e-06 G(x) = 1.44242e-03 R = 8.66025e-01 
 H[1]    Step=3 | Foil=1 | O=(2, 2) -&gt; 1. time = 9.1[s] F(x) = 1.30443e-06 G(x) = 1.44242e-03 R = 8.66025e-01 
 H[1]H[2]H[3]    Step=3 | Foil=1 | O=(2, 2) -&gt; 2. time = 9.9[s] F(x) = 1.30443e-06 G(x) = 2.39651e-07 R = 8.66025e-01 
@@ -293,9 +293,9 @@ Torus=4.385722317353829e-6
 (maximum(Scaling), minimum(Scaling)) = (7.999993010770878, 1.022076922892108)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972286948352, 0.9531000484123172)
-GC live:     178.476 MiB
-JIT:          15.737 MiB
-Max. RSS:   2196.355 MiB
+GC live:     178.445 MiB
+JIT:          15.702 MiB
+Max. RSS:   2169.578 MiB
     Step=4 | Foil=1 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.30443e-06 G(x) = 5.93702e-03 R = 7.07107e-01 
 H[1]    Step=4 | Foil=1 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.30331e-06 G(x) = 5.93702e-03 R = 7.07107e-01 
 H[1]    Step=4 | Foil=1 | O=(2, 1) -&gt; 2. time = 1.6[s] F(x) = 1.30331e-06 G(x) = 1.39694e-14 R = 7.07107e-01 
@@ -308,24 +308,24 @@ Torus=4.763388782104074e-6
 (maximum(Scaling), minimum(Scaling)) = (7.999993014384529, 1.0220769102275682)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972297363413, 0.9531000342619962)
-GC live:     178.158 MiB
-JIT:          15.737 MiB
-Max. RSS:   2196.355 MiB
+GC live:     178.118 MiB
+JIT:          15.702 MiB
+Max. RSS:   2169.578 MiB
 |g-&gt;    Step=5 | Model=1 | -&gt; 1. time = 0.8[s] F(x) = 1.30328e-06 G(x) = 6.09897e-03 R = 7.07107e-01
--&gt;    Step=5 | Model=1 | -&gt; 2. time = 1.6[s] F(x) = 1.30327e-06 G(x) = 2.40735e-03 R = 5.00000e-01
--&gt;    Step=5 | Model=1 | -&gt; 3. time = 2.4[s] F(x) = 1.30326e-06 G(x) = 1.73946e-03 R = 3.53553e-01
+-&gt;    Step=5 | Model=1 | -&gt; 2. time = 1.7[s] F(x) = 1.30327e-06 G(x) = 2.40735e-03 R = 5.00000e-01
+-&gt;    Step=5 | Model=1 | -&gt; 3. time = 2.5[s] F(x) = 1.30326e-06 G(x) = 1.73946e-03 R = 3.53553e-01
 -&gt;    Step=5 | Model=1 | -&gt; 4. time = 3.3[s] F(x) = 1.30325e-06 G(x) = 1.21459e-03 R = 2.50000e-01
 -&gt;    Step=5 | Model=1 | -&gt; 5. time = 4.1[s] F(x) = 1.30325e-06 G(x) = 7.60291e-04 R = 1.76777e-01
 -&gt;    Step=5 | Model=1 | -&gt; 6. time = 4.9[s] F(x) = 1.30325e-06 G(x) = 4.23835e-04 R = 1.25000e-01
 -&gt;    Step=5 | Model=1 | -&gt; 7. time = 5.7[s] F(x) = 1.30325e-06 G(x) = 2.05029e-04 R = 8.83883e-02
--&gt;    Step=5 | Model=1 | -&gt; 8. time = 6.5[s] F(x) = 1.30324e-06 G(x) = 8.00130e-05 R = 6.25000e-02
--&gt;    Step=5 | Model=1 | -&gt; 9. time = 7.3[s] F(x) = 1.30324e-06 G(x) = 2.56450e-05 R = 4.41942e-02
+-&gt;    Step=5 | Model=1 | -&gt; 8. time = 6.6[s] F(x) = 1.30324e-06 G(x) = 8.00130e-05 R = 6.25000e-02
+-&gt;    Step=5 | Model=1 | -&gt; 9. time = 7.4[s] F(x) = 1.30324e-06 G(x) = 2.56450e-05 R = 4.41942e-02
 -&gt;    Step=5 | Model=1 | -&gt; 10. time = 8.2[s] F(x) = 1.30324e-06 G(x) = 2.39176e-05 R = 3.12500e-02
 -&gt;    Step=5 | Model=1 | -&gt; 11. time = 9.0[s] F(x) = 1.30324e-06 G(x) = 2.46827e-05 R = 2.20971e-02
--&gt;    Step=5 | Model=1 | -&gt; 12. time = 9.8[s] F(x) = 1.30324e-06 G(x) = 1.95594e-05 R = 1.56250e-02
--&gt;    Step=5 | Model=1 | -&gt; 13. time = 10.6[s] F(x) = 1.30324e-06 G(x) = 1.40825e-05 R = 1.10485e-02
--&gt;    Step=5 | Model=1 | -&gt; 14. time = 11.4[s] F(x) = 1.30324e-06 G(x) = 1.12023e-05 R = 7.81250e-03
--&gt;    Step=5 | Model=1 | -&gt; 15. time = 12.2[s] F(x) = 1.30324e-06 G(x) = 1.03191e-05 R = 5.52427e-03
+-&gt;    Step=5 | Model=1 | -&gt; 12. time = 9.9[s] F(x) = 1.30324e-06 G(x) = 1.95594e-05 R = 1.56250e-02
+-&gt;    Step=5 | Model=1 | -&gt; 13. time = 10.7[s] F(x) = 1.30324e-06 G(x) = 1.40825e-05 R = 1.10485e-02
+-&gt;    Step=5 | Model=1 | -&gt; 14. time = 11.5[s] F(x) = 1.30324e-06 G(x) = 1.12023e-05 R = 7.81250e-03
+-&gt;    Step=5 | Model=1 | -&gt; 15. time = 12.3[s] F(x) = 1.30324e-06 G(x) = 1.03191e-05 R = 5.52427e-03
 -&gt;    Step=5 | Model=1 | -&gt; 16. time = 13.1[s] F(x) = 1.30324e-06 G(x) = 1.00450e-05 R = 3.90625e-03
     Model=1 | -&gt; Frequency = 1.59155e-01[Hz], 1.00000e+00[rad/s] Damping = 4.99763e-03[Hz]
 
@@ -337,13 +337,13 @@ M=1. 4. [1441-1920] Model IC -&gt; 9. time = 0.0[s] F(x) = 1.63450e-08 G(x) = 4.
 M=1. 5. [1921-2400] Model IC -&gt; 11. time = 0.0[s] F(x) = 1.56575e-09 G(x) = 9.29635e-13 R = 1.02400e+03
 |g-&gt;    Step=5 | Model=2 | -&gt; 1. time = 0.8[s] F(x) = 1.22031e-20 G(x) = 2.40779e-08 R = 7.07107e-01
 -&gt;    Step=5 | Model=2 | -&gt; 2. time = 1.6[s] F(x) = 1.20333e-20 G(x) = 9.51036e-09 R = 5.00000e-01
--&gt;    Step=5 | Model=2 | -&gt; 3. time = 2.4[s] F(x) = 1.20025e-20 G(x) = 3.45381e-09 R = 3.53553e-01
--&gt;    Step=5 | Model=2 | -&gt; 4. time = 3.2[s] F(x) = 1.19984e-20 G(x) = 1.32572e-09 R = 2.50000e-01
--&gt;    Step=5 | Model=2 | -&gt; 5. time = 4.0[s] F(x) = 1.19978e-20 G(x) = 5.14980e-10 R = 1.76777e-01
--&gt;    Step=5 | Model=2 | -&gt; 6. time = 4.8[s] F(x) = 1.19977e-20 G(x) = 2.89033e-10 R = 1.25000e-01
--&gt;    Step=5 | Model=2 | -&gt; 7. time = 5.6[s] F(x) = 1.19977e-20 G(x) = 1.54445e-11 R = 8.83883e-02
+-&gt;    Step=5 | Model=2 | -&gt; 3. time = 2.5[s] F(x) = 1.20025e-20 G(x) = 3.45381e-09 R = 3.53553e-01
+-&gt;    Step=5 | Model=2 | -&gt; 4. time = 3.3[s] F(x) = 1.19984e-20 G(x) = 1.32572e-09 R = 2.50000e-01
+-&gt;    Step=5 | Model=2 | -&gt; 5. time = 4.1[s] F(x) = 1.19978e-20 G(x) = 5.14980e-10 R = 1.76777e-01
+-&gt;    Step=5 | Model=2 | -&gt; 6. time = 4.9[s] F(x) = 1.19977e-20 G(x) = 2.89033e-10 R = 1.25000e-01
+-&gt;    Step=5 | Model=2 | -&gt; 7. time = 5.7[s] F(x) = 1.19977e-20 G(x) = 1.54445e-11 R = 8.83883e-02
 -&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=5 | Model=2 | -&gt; 8. time = 6.5[s] F(x) = 1.19977e-20 G(x) = 4.77053e-12 R = 4.00000e+00
--&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=5 | Model=2 | -&gt; 9. time = 7.3[s] F(x) = 1.19977e-20 G(x) = 2.93090e-12 R = 4.52548e+01
+-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=5 | Model=2 | -&gt; 9. time = 7.4[s] F(x) = 1.19977e-20 G(x) = 2.93090e-12 R = 4.52548e+01
 |m=1.29766e-14|Updating Test Error (1,)
 M=2. 1. [1-480] Model IC -&gt; 7. time = 0.0[s] F(x) = 1.15505e-19 G(x) = 1.92672e-13 R = 5.54256e+01
 M=2. 2. [481-960] Model IC -&gt; 8. time = 0.0[s] F(x) = 3.17949e-21 G(x) = 1.75299e-13 R = 2.21703e+02
@@ -355,9 +355,9 @@ Torus=4.763388782104074e-6
 (maximum(Scaling), minimum(Scaling)) = (7.999993014384529, 1.0220769102275682)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972297363413, 0.9531000342619962)
-GC live:     206.264 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     206.288 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=6 | Foil=1 | O=(2, 2) -&gt; 0. time = 0.0[s] F(x) = 1.30324e-06 G(x) = 3.48724e-05 R = 8.66025e-01 
 H[1]H[2]    Step=6 | Foil=1 | O=(2, 2) -&gt; 1. time = 0.8[s] F(x) = 1.30324e-06 G(x) = 3.48724e-05 R = 8.66025e-01 
 H[1]H[2]H[3]    Step=6 | Foil=1 | O=(2, 2) -&gt; 2. time = 1.6[s] F(x) = 1.30324e-06 G(x) = 6.41351e-10 R = 8.66025e-01 
@@ -370,9 +370,9 @@ Torus=4.763388782143418e-6
 (maximum(Scaling), minimum(Scaling)) = (7.999993014384529, 1.022076910227568)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972297363413, 0.9531000342619964)
-GC live:     179.020 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     178.858 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=7 | Foil=1 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.30324e-06 G(x) = 4.98605e-04 R = 7.07107e-01 
 H[1]    Step=7 | Foil=1 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.30323e-06 G(x) = 4.98605e-04 R = 7.07107e-01 
 H[1]    Step=7 | Foil=1 | O=(2, 1) -&gt; 2. time = 1.6[s] F(x) = 1.30323e-06 G(x) = 6.81898e-15 R = 7.07107e-01 
@@ -386,9 +386,9 @@ Torus=4.795107735572475e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301468899, 1.0220769091471558)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.99997229823792, 0.9531000330910065)
-GC live:     179.491 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     179.454 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=8 | Foil=1 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.30323e-06 G(x) = 6.51143e-11 R = 7.07107e-01 
 H[1]    Step=8 | Foil=1 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.30323e-06 G(x) = 6.51143e-11 R = 7.07107e-01 
 Index=1 ACCEPT (2, 1) Gain = 6.98802e-21 UPD = 1.30323e-06
@@ -400,25 +400,25 @@ Torus=4.795107732956903e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301468899, 1.0220769091471562)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.99997229823792, 0.9531000330910063)
-GC live:     178.917 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     178.880 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
 |g-&gt;    Step=9 | Model=1 | -&gt; 1. time = 0.8[s] F(x) = 1.30322e-06 G(x) = 3.46835e-05 R = 2.76214e-03
 -&gt;    Step=9 | Model=1 | -&gt; 2. time = 1.6[s] F(x) = 1.30322e-06 G(x) = 1.00516e-05 R = 1.95312e-03
--&gt;    Step=9 | Model=1 | -&gt; 3. time = 2.4[s] F(x) = 1.30322e-06 G(x) = 9.28441e-06 R = 1.38107e-03
--&gt;    Step=9 | Model=1 | -&gt; 4. time = 3.2[s] F(x) = 1.30322e-06 G(x) = 8.70990e-06 R = 9.76562e-04
--&gt;    Step=9 | Model=1 | -&gt; 5. time = 4.0[s] F(x) = 1.30322e-06 G(x) = 8.04903e-06 R = 6.90534e-04
+-&gt;    Step=9 | Model=1 | -&gt; 3. time = 2.5[s] F(x) = 1.30322e-06 G(x) = 9.28441e-06 R = 1.38107e-03
+-&gt;    Step=9 | Model=1 | -&gt; 4. time = 3.3[s] F(x) = 1.30322e-06 G(x) = 8.70990e-06 R = 9.76562e-04
+-&gt;    Step=9 | Model=1 | -&gt; 5. time = 4.1[s] F(x) = 1.30322e-06 G(x) = 8.04903e-06 R = 6.90534e-04
 -&gt;    Step=9 | Model=1 | -&gt; 6. time = 4.9[s] F(x) = 1.30322e-06 G(x) = 7.24654e-06 R = 4.88281e-04
 -&gt;    Step=9 | Model=1 | -&gt; 7. time = 5.7[s] F(x) = 1.30322e-06 G(x) = 6.34211e-06 R = 3.45267e-04
--&gt;    Step=9 | Model=1 | -&gt; 8. time = 6.5[s] F(x) = 1.30322e-06 G(x) = 5.45365e-06 R = 2.44141e-04
--&gt;    Step=9 | Model=1 | -&gt; 9. time = 7.3[s] F(x) = 1.30322e-06 G(x) = 4.78709e-06 R = 1.72633e-04
--&gt;    Step=9 | Model=1 | -&gt; 10. time = 8.1[s] F(x) = 1.30322e-06 G(x) = 4.52675e-06 R = 1.22070e-04
--&gt;    Step=9 | Model=1 | -&gt; 11. time = 8.9[s] F(x) = 1.30322e-06 G(x) = 4.60263e-06 R = 8.63167e-05
--&gt;    Step=9 | Model=1 | -&gt; 12. time = 9.7[s] F(x) = 1.30322e-06 G(x) = 4.70232e-06 R = 6.10352e-05
--&gt;    Step=9 | Model=1 | -&gt; 13. time = 10.6[s] F(x) = 1.30322e-06 G(x) = 4.55646e-06 R = 4.31584e-05
--&gt;    Step=9 | Model=1 | -&gt; 14. time = 11.4[s] F(x) = 1.30322e-06 G(x) = 4.08695e-06 R = 3.05176e-05
--&gt;    Step=9 | Model=1 | -&gt; 15. time = 12.2[s] F(x) = 1.30322e-06 G(x) = 3.36836e-06 R = 2.15792e-05
--&gt;    Step=9 | Model=1 | -&gt; 16. time = 13.0[s] F(x) = 1.30322e-06 G(x) = 2.53640e-06 R = 1.52588e-05
+-&gt;    Step=9 | Model=1 | -&gt; 8. time = 6.6[s] F(x) = 1.30322e-06 G(x) = 5.45365e-06 R = 2.44141e-04
+-&gt;    Step=9 | Model=1 | -&gt; 9. time = 7.4[s] F(x) = 1.30322e-06 G(x) = 4.78709e-06 R = 1.72633e-04
+-&gt;    Step=9 | Model=1 | -&gt; 10. time = 8.2[s] F(x) = 1.30322e-06 G(x) = 4.52675e-06 R = 1.22070e-04
+-&gt;    Step=9 | Model=1 | -&gt; 11. time = 9.0[s] F(x) = 1.30322e-06 G(x) = 4.60263e-06 R = 8.63167e-05
+-&gt;    Step=9 | Model=1 | -&gt; 12. time = 9.8[s] F(x) = 1.30322e-06 G(x) = 4.70232e-06 R = 6.10352e-05
+-&gt;    Step=9 | Model=1 | -&gt; 13. time = 10.7[s] F(x) = 1.30322e-06 G(x) = 4.55646e-06 R = 4.31584e-05
+-&gt;    Step=9 | Model=1 | -&gt; 14. time = 11.5[s] F(x) = 1.30322e-06 G(x) = 4.08695e-06 R = 3.05176e-05
+-&gt;    Step=9 | Model=1 | -&gt; 15. time = 12.3[s] F(x) = 1.30322e-06 G(x) = 3.36836e-06 R = 2.15792e-05
+-&gt;    Step=9 | Model=1 | -&gt; 16. time = 13.1[s] F(x) = 1.30322e-06 G(x) = 2.53640e-06 R = 1.52588e-05
     Model=1 | -&gt; Frequency = 1.59155e-01[Hz], 1.00000e+00[rad/s] Damping = 4.99763e-03[Hz]
 
 |m=9.75673e-06|Updating Test Error (1,)
@@ -429,13 +429,13 @@ M=1. 4. [1441-1920] Model IC -&gt; 8. time = 0.0[s] F(x) = 1.63552e-08 G(x) = 1.
 M=1. 5. [1921-2400] Model IC -&gt; 7. time = 0.0[s] F(x) = 1.58575e-09 G(x) = 1.11386e-09 R = 2.89631e+03
 |g-&gt;    Step=9 | Model=2 | -&gt; 1. time = 0.8[s] F(x) = 1.10145e-20 G(x) = 1.70270e-08 R = 7.07107e-01
 -&gt;    Step=9 | Model=2 | -&gt; 2. time = 1.6[s] F(x) = 1.09252e-20 G(x) = 6.77243e-09 R = 5.00000e-01
--&gt;    Step=9 | Model=2 | -&gt; 3. time = 2.5[s] F(x) = 1.09088e-20 G(x) = 2.56645e-09 R = 3.53553e-01
--&gt;    Step=9 | Model=2 | -&gt; 4. time = 3.3[s] F(x) = 1.09065e-20 G(x) = 1.07627e-09 R = 2.50000e-01
--&gt;    Step=9 | Model=2 | -&gt; 5. time = 4.1[s] F(x) = 1.09062e-20 G(x) = 5.48537e-10 R = 1.76777e-01
--&gt;    Step=9 | Model=2 | -&gt; 6. time = 4.9[s] F(x) = 1.09062e-20 G(x) = 1.56014e-10 R = 1.25000e-01
+-&gt;    Step=9 | Model=2 | -&gt; 3. time = 2.4[s] F(x) = 1.09088e-20 G(x) = 2.56645e-09 R = 3.53553e-01
+-&gt;    Step=9 | Model=2 | -&gt; 4. time = 3.2[s] F(x) = 1.09065e-20 G(x) = 1.07627e-09 R = 2.50000e-01
+-&gt;    Step=9 | Model=2 | -&gt; 5. time = 4.0[s] F(x) = 1.09062e-20 G(x) = 5.48537e-10 R = 1.76777e-01
+-&gt;    Step=9 | Model=2 | -&gt; 6. time = 4.8[s] F(x) = 1.09062e-20 G(x) = 1.56014e-10 R = 1.25000e-01
 -&gt;    Step=9 | Model=2 | -&gt; 7. time = 5.7[s] F(x) = 1.09061e-20 G(x) = 5.18928e-11 R = 8.83883e-02
 -&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=9 | Model=2 | -&gt; 8. time = 6.5[s] F(x) = 1.09061e-20 G(x) = 1.17709e-11 R = 5.65685e+00
--&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=9 | Model=2 | -&gt; 9. time = 7.4[s] F(x) = 1.09061e-20 G(x) = 5.54769e-12 R = 4.52548e+01
+-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;-&gt;    Step=9 | Model=2 | -&gt; 9. time = 7.3[s] F(x) = 1.09061e-20 G(x) = 5.54769e-12 R = 4.52548e+01
 |m=6.62767e-13|Updating Test Error (1,)
 M=2. 1. [1-480] Model IC -&gt; 5. time = 0.0[s] F(x) = 1.15430e-19 G(x) = 7.52813e-13 R = 1.81019e+02
 M=2. 2. [481-960] Model IC -&gt; 8. time = 0.0[s] F(x) = 2.99415e-21 G(x) = 3.08364e-14 R = 4.52548e+01
@@ -447,9 +447,9 @@ Torus=4.795107732956903e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301468899, 1.0220769091471562)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.99997229823792, 0.9531000330910063)
-GC live:     206.723 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     206.937 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=10 | Foil=1 | O=(2, 2) -&gt; 0. time = 0.0[s] F(x) = 1.30322e-06 G(x) = 3.44472e-05 R = 8.66025e-01 
 H[1]H[2]    Step=10 | Foil=1 | O=(2, 2) -&gt; 1. time = 0.8[s] F(x) = 1.30321e-06 G(x) = 3.44472e-05 R = 8.66025e-01 
 H[1]H[2]H[3]    Step=10 | Foil=1 | O=(2, 2) -&gt; 2. time = 1.6[s] F(x) = 1.30321e-06 G(x) = 6.39731e-10 R = 8.66025e-01 
@@ -462,12 +462,12 @@ Torus=4.795107732996692e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301468899, 1.0220769091471558)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.99997229823792, 0.9531000330910068)
-GC live:     178.931 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     179.019 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=11 | Foil=1 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.30321e-06 G(x) = 3.74967e-05 R = 7.07107e-01 
 H[1]    Step=11 | Foil=1 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.30321e-06 G(x) = 3.74967e-05 R = 7.07107e-01 
-H[1]    Step=11 | Foil=1 | O=(2, 1) -&gt; 2. time = 1.7[s] F(x) = 1.30321e-06 G(x) = 1.49345e-14 R = 7.07107e-01 
+H[1]    Step=11 | Foil=1 | O=(2, 1) -&gt; 2. time = 1.6[s] F(x) = 1.30321e-06 G(x) = 1.49345e-14 R = 7.07107e-01 
 Index=1 ACCEPT (2, 1) Gain = 4.47222e-14 UPD = 1.30321e-06
 |m=0.00000e+00||S|m=0.00000e+00||S|m=0.00000e+00||S|m=0.00000e+00||S|m=0.00000e+00||S    Step=11 | Foil=2 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.09061e-20 G(x) = 3.23070e-09 R = 5.00000e-01 
 H[1]    Step=11 | Foil=2 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.05741e-20 G(x) = 3.23070e-09 R = 5.00000e-01 
@@ -478,9 +478,9 @@ Torus=4.797489384774201e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301471263, 1.0220769090533501)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972298303511, 0.9531000330162439)
-GC live:     179.449 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB
+GC live:     179.667 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB
     Step=12 | Foil=1 | O=(2, 1) -&gt; 0. time = 0.0[s] F(x) = 1.30321e-06 G(x) = 5.00683e-12 R = 7.07107e-01 
 H[1]    Step=12 | Foil=1 | O=(2, 1) -&gt; 1. time = 0.8[s] F(x) = 1.30321e-06 G(x) = 5.00683e-12 R = 7.07107e-01 
 Index=1 REJECT (2, 1) Margin = -1.31290e-20 UPD = 1.30321e-06
@@ -492,9 +492,9 @@ Torus=4.797489384774201e-6
 (maximum(Scaling), minimum(Scaling)) = (7.99999301471263, 1.0220769090533501)
 Saving into file: MTF-Tutorial.bson
 (maximum(Scaling), minimum(Scaling)) = (7.999972298303511, 0.9531000330162439)
-GC live:     178.873 MiB
-JIT:          15.834 MiB
-Max. RSS:   2196.355 MiB</code></pre><h2 id="Analysing-the-the-calculated-invariant-foliations"><a class="docs-heading-anchor" href="#Analysing-the-the-calculated-invariant-foliations">Analysing the the calculated invariant foliations</a><a id="Analysing-the-the-calculated-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Analysing-the-the-calculated-invariant-foliations" title="Permalink"></a></h2><p>Setting the index of the vector bundle for which the results are analysed</p><pre><code class="language-julia hljs">Index = 1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1</code></pre><p>Loading the data. Here it is not strictly necessary, because these are already in memory.  However, if a separate script is use to analyse the results, data and the results must be loaded.</p><pre><code class="language-julia hljs">data = JLSO.load(&quot;DATA-$(Name).bson&quot;)
+GC live:     178.962 MiB
+JIT:          15.799 MiB
+Max. RSS:   2169.578 MiB</code></pre><h2 id="Analysing-the-the-calculated-invariant-foliations"><a class="docs-heading-anchor" href="#Analysing-the-the-calculated-invariant-foliations">Analysing the the calculated invariant foliations</a><a id="Analysing-the-the-calculated-invariant-foliations-1"></a><a class="docs-heading-anchor-permalink" href="#Analysing-the-the-calculated-invariant-foliations" title="Permalink"></a></h2><p>Setting the index of the vector bundle for which the results are analysed</p><pre><code class="language-julia hljs">Index = 1</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">1</code></pre><p>Loading the data. Here it is not strictly necessary, because these are already in memory.  However, if a separate script is use to analyse the results, data and the results must be loaded.</p><pre><code class="language-julia hljs">data = JLSO.load(&quot;DATA-$(Name).bson&quot;)
 Parameters      = data[:Parameters]
 Time_Step       = data[:Time_Step]
 Index_List      = data[:Index_List]
@@ -699,4 +699,4 @@ let it = 0
             it += 1
         end
     end
-end</code></pre><p><img src="../FIGURE-LATENT.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 16 December 2025 17:12">Tuesday 16 December 2025</span>. Using Julia version 1.12.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><p><img src="../FIGURE-LATENT.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 16 December 2025 17:21">Tuesday 16 December 2025</span>. Using Julia version 1.12.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
